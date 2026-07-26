@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>The Living Syllabus — IB Biology HL concept web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Public+Sans:ital,wght@0,300;0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E0B14;
+  --ink2:#151020;
+  --ink3:#1E1730;
+  --line:#2C2340;
+  --text:#EDE6F5;
+  --mute:#9184A8;
+  --faint:#6B5F82;
+  --violet:#C0A2FF;
+  --A:#E9B44C;
+  --B:#57A9DC;
+  --C:#4FBE8F;
+  --D:#E8608C;
+  --panelW:392px;
+  --headH:64px;
+  --display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- header ---------- */
+.head{
+  position:fixed;inset:0 0 auto 0;height:var(--headH);z-index:40;
+  display:flex;align-items:center;gap:18px;padding:0 18px;
+  background:linear-gradient(180deg,rgba(14,11,20,.96),rgba(14,11,20,.82));
+  border-bottom:1px solid var(--line);backdrop-filter:blur(14px);
+}
+.brand{display:flex;align-items:baseline;gap:10px;flex:none}
+.brand h1{
+  font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.02em;margin:0;
+  font-variation-settings:"opsz" 24;
+}
+.brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.09em;text-transform:uppercase}
+
+.tools{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:nowrap}
+.search{position:relative;width:250px}
+.search input{
+  width:100%;height:36px;padding:0 32px 0 12px;border-radius:9px;
+  background:var(--ink3);border:1px solid var(--line);outline:none;font-size:13.5px;
+}
+.search input:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(192,162,255,.14)}
+.search input::placeholder{color:var(--faint)}
+.search kbd{
+  position:absolute;right:9px;top:9px;font-family:var(--mono);font-size:10px;color:var(--faint);
+  border:1px solid var(--line);border-radius:4px;padding:1px 5px;pointer-events:none;
+}
+.results{
+  position:absolute;top:42px;left:0;right:0;max-height:340px;overflow:auto;z-index:60;
+  background:var(--ink2);border:1px solid var(--line);border-radius:11px;padding:5px;
+  box-shadow:0 22px 50px rgba(0,0,0,.6);display:none;
+}
+.results.on{display:block}
+.results button{display:flex;width:100%;gap:9px;align-items:center;padding:7px 9px;border-radius:7px;text-align:left}
+.results button:hover,.results button.cur{background:var(--ink3)}
+.results .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.results .nm{font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.results .cd{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+.themes{display:flex;gap:5px}
+.chip{
+  display:flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:8px;
+  border:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.04em;
+  color:var(--mute);transition:.15s;
+}
+.chip .sw{width:8px;height:8px;border-radius:2px;background:currentColor}
+.chip.on{color:var(--text);background:var(--ink3)}
+.chip.off{opacity:.34}
+.chip:hover{border-color:var(--faint)}
+
+.modebtn{
+  height:36px;padding:0 15px;border-radius:9px;border:1px solid var(--line);
+  font-size:13px;font-weight:600;color:var(--mute);transition:.15s;white-space:nowrap;
+}
+.modebtn:hover{color:var(--text);border-color:var(--faint)}
+.modebtn.on{background:var(--violet);border-color:var(--violet);color:#14091F}
+
+/* ---------- canvas ---------- */
+#stage{position:fixed;inset:var(--headH) var(--panelW) 0 0;z-index:1}
+canvas{display:block;width:100%;height:100%;cursor:grab}
+canvas.grabbing{cursor:grabbing}
+canvas.pointing{cursor:pointer}
+
+.tip{
+  position:fixed;z-index:50;pointer-events:none;opacity:0;transition:opacity .12s;
+  background:var(--ink2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;
+  max-width:300px;box-shadow:0 14px 34px rgba(0,0,0,.55);
+}
+.tip.on{opacity:1}
+.tip .t{font-family:var(--display);font-weight:600;font-size:13.5px;margin-bottom:3px}
+.tip .b{font-size:12px;color:var(--mute);line-height:1.45}
+.tip em{font-style:normal;color:var(--violet)}
+
+/* ---------- floating controls ---------- */
+.hud{position:fixed;left:16px;bottom:16px;z-index:30;display:flex;flex-direction:column;gap:9px;align-items:flex-start}
+.key{
+  background:rgba(21,16,32,.9);border:1px solid var(--line);border-radius:11px;padding:11px 13px;
+  backdrop-filter:blur(10px);width:214px;
+}
+.key h4{margin:0 0 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.key .row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--mute);margin-bottom:5px}
+.key .row:last-child{margin-bottom:0}
+.key svg{flex:none}
+.zoombar{display:flex;gap:5px}
+.zoombar button{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(21,16,32,.9);
+  color:var(--mute);font-size:15px;display:grid;place-items:center;backdrop-filter:blur(10px);
+}
+.zoombar button:hover{color:var(--text);border-color:var(--faint)}
+.zoombar button.wide{width:auto;padding:0 12px;font-size:12px;font-weight:600}
+.keytoggle{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase}
+.keytoggle:hover{color:var(--text)}
+
+/* ---------- panel ---------- */
+.panel{
+  position:fixed;top:var(--headH);right:0;bottom:0;width:var(--panelW);z-index:35;
+  background:var(--ink2);border-left:1px solid var(--line);display:flex;flex-direction:column;
+}
+.pscroll{overflow-y:auto;padding:22px;flex:1}
+
+.empty{padding:34px 24px;color:var(--mute)}
+.empty h2{font-family:var(--display);font-weight:800;font-size:26px;line-height:1.12;letter-spacing:-.025em;color:var(--text);margin:0 0 14px;font-variation-settings:"opsz" 40}
+.empty p{font-size:13.5px;line-height:1.62;margin:0 0 13px}
+.empty .lead{color:var(--text);font-size:14.5px}
+.empty ul{margin:0;padding-left:0;list-style:none}
+.empty li{font-size:13px;line-height:1.55;margin-bottom:11px;padding-left:26px;position:relative}
+.empty li b{color:var(--text);font-weight:600}
+.empty li .n{position:absolute;left:0;top:1px;font-family:var(--mono);font-size:10px;color:var(--violet)}
+.stat{display:flex;gap:20px;margin:20px 0 22px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat div span{display:block;font-family:var(--display);font-weight:800;font-size:22px;color:var(--text);line-height:1;font-variation-settings:"opsz" 30}
+.stat div small{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+
+.crumb{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;padding:3px 7px;border-radius:5px;background:var(--ink3);color:var(--mute)}
+.hl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:3px 7px;border-radius:5px;border:1px solid currentColor}
+.themetag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.back{margin-left:auto;font-size:11.5px;color:var(--faint)}
+.back:hover{color:var(--text)}
+
+.panel h2.title{
+  font-family:var(--display);font-weight:800;font-size:31px;line-height:1.06;letter-spacing:-.03em;
+  margin:0 0 12px;font-variation-settings:"opsz" 44;
+}
+.def{font-size:14.5px;line-height:1.6;color:#CFC4DE;margin:0 0 22px}
+
+.secthead{
+  display:flex;align-items:baseline;gap:8px;margin:0 0 12px;padding-top:18px;border-top:1px solid var(--line);
+}
+.secthead h3{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);font-weight:500;margin:0}
+.secthead span{font-family:var(--mono);font-size:10px;color:var(--violet)}
+
+.link{
+  display:block;width:100%;text-align:left;padding:11px 12px;border-radius:10px;margin-bottom:5px;
+  border:1px solid transparent;transition:.13s;
+}
+.link:hover{background:var(--ink3);border-color:var(--line)}
+.link .kind{
+  font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  display:block;margin-bottom:5px;
+}
+.link .sent{font-size:13.5px;line-height:1.5;color:var(--mute)}
+.link .sent b{font-weight:600}
+.link .sent .me{color:var(--faint);font-weight:400}
+.link:hover .sent{color:var(--text)}
+
+/* ---------- trace ---------- */
+.tracebar{
+  padding:16px 22px;border-bottom:1px solid var(--line);background:var(--ink3);
+}
+.tracebar h3{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--violet);margin:0 0 10px;font-weight:500}
+.slots{display:flex;align-items:center;gap:9px}
+.slot{
+  flex:1;min-width:0;height:38px;border-radius:9px;border:1px dashed var(--line);
+  display:flex;align-items:center;padding:0 11px;font-size:12.5px;color:var(--faint);
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.slot.filled{border-style:solid;color:var(--text);background:var(--ink2)}
+.slot.active{border-color:var(--violet);color:var(--violet);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.5}}
+.arrow{color:var(--faint);flex:none}
+.tracebtns{display:flex;gap:7px;margin-top:10px}
+.tracebtns button{
+  flex:1;height:31px;border-radius:8px;border:1px solid var(--line);font-size:11.5px;color:var(--mute);
+}
+.tracebtns button:hover{color:var(--text);border-color:var(--faint)}
+
+.step{display:flex;gap:12px;margin-bottom:2px}
+.rail{width:22px;flex:none;display:flex;flex-direction:column;align-items:center}
+.rail .bead{width:11px;height:11px;border-radius:50%;margin-top:5px;flex:none;box-shadow:0 0 0 3px var(--ink2)}
+.rail .stem{width:1px;flex:1;background:var(--line);min-height:14px}
+.stepbody{padding-bottom:16px;flex:1;min-width:0}
+.stepbody .nm{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:-.01em;display:block;text-align:left}
+.stepbody .nm:hover{color:var(--violet)}
+.stepbody .via{font-size:12.5px;line-height:1.5;color:var(--mute);margin-top:5px}
+.stepbody .via em{font-style:normal;color:var(--violet)}
+.stepbody .rev{font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.08em}
+.narrative{
+  font-size:13.5px;line-height:1.68;color:#CFC4DE;background:var(--ink3);border-radius:11px;
+  padding:14px 15px;margin-bottom:20px;
+}
+.narrative b{color:var(--text);font-weight:600}
+.narrative i{font-style:normal;color:var(--violet)}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:70;
+  background:var(--ink3);border:1px solid var(--line);border-radius:10px;padding:9px 15px;
+  font-size:13px;opacity:0;transition:.2s;pointer-events:none;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:980px){
+  :root{--panelW:340px}
+  .search{width:180px}
+  .brand .sub{display:none}
+}
+@media (max-width:820px){
+  :root{--panelW:0px;--headH:112px}
+  .head{flex-wrap:wrap;align-content:center;padding:8px 12px;gap:9px}
+  .brand{width:100%}
+  .tools{margin-left:0;width:100%;gap:7px;flex-wrap:wrap}
+  .search{flex:1;width:auto}
+  .themes{order:3;width:100%;justify-content:space-between}
+  .chip{flex:1;justify-content:center;padding:0 6px}
+  #stage{inset:var(--headH) 0 44% 0}
+  .panel{top:auto;bottom:0;left:0;width:100%;height:44%;border-left:none;border-top:1px solid var(--line)}
+  .pscroll{padding:16px}
+  .panel h2.title{font-size:24px}
+  .hud{display:none}
+  .empty{padding:16px}
+  .empty h2{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="brand">
+    <h1>The Living Syllabus</h1>
+    <span class="sub">IB Biology HL &middot; 223 concepts &middot; 534 links</span>
+  </div>
+  <div class="tools">
+    <div class="search">
+      <input id="q" type="text" placeholder="Search a concept…" autocomplete="off" spellcheck="false">
+      <kbd>/</kbd>
+      <div class="results" id="res"></div>
+    </div>
+    <div class="themes" id="themes"></div>
+    <button class="modebtn" id="tracebtn">Trace a path</button>
+  </div>
+</header>
+
+<div id="stage"><canvas id="cv"></canvas></div>
+
+<div class="hud">
+  <div class="key" id="key">
+    <h4>How links are drawn</h4>
+    <div class="row"><svg width="34" height="8"><line x1="1" y1="4" x2="26" y2="4" stroke="#9184A8" stroke-width="1.5"/><path d="M26 1 L32 4 L26 7 Z" fill="#9184A8"/></svg> makes / becomes</div>
+    <div class="row"><svg width="34" height="8"><line x1="1" y1="4" x2="26" y2="4" stroke="#9184A8" stroke-width="1.5" stroke-dasharray="5 3"/><path d="M26 1 L32 4 L26 7 Z" fill="#9184A8"/></svg> needs / depends on</div>
+    <div class="row"><svg width="34" height="8"><line x1="1" y1="4" x2="26" y2="4" stroke="#9184A8" stroke-width="1.5" stroke-dasharray="1.5 3"/><path d="M26 1 L32 4 L26 7 Z" fill="#9184A8"/></svg> controls / regulates</div>
+    <div class="row"><svg width="34" height="8"><line x1="1" y1="4" x2="26" y2="4" stroke="#9184A8" stroke-width="1"/><path d="M26 1 L32 4 L26 7 Z" fill="#9184A8"/></svg> is part of / is a type of</div>
+    <div class="row"><svg width="34" height="8"><line x1="1" y1="4" x2="26" y2="4" stroke="#9184A8" stroke-width="1.5" stroke-dasharray="9 3 1.5 3"/><path d="M26 1 L32 4 L26 7 Z" fill="#9184A8"/></svg> is evidence for / causes</div>
+  </div>
+  <div class="zoombar">
+    <button id="zin" title="Zoom in">+</button>
+    <button id="zout" title="Zoom out">&minus;</button>
+    <button id="zfit" class="wide" title="Fit everything on screen">Fit</button>
+    <button id="keyt" class="wide keytoggle">Key</button>
+  </div>
+</div>
+
+<aside class="panel">
+  <div id="tracebar" style="display:none"></div>
+  <div class="pscroll" id="panel"></div>
+</aside>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script id="graphdata" type="application/json">{"nodes":[{"id":"water","label":"Water","theme":"A","code":"A1.1","hl":false,"def":"A polar molecule: oxygen pulls the shared electrons away from the two hydrogens, leaving a slight negative charge on O and slight positive charges on H."},{"id":"hbond","label":"Hydrogen bonding","theme":"A","code":"A1.1","hl":false,"def":"A temporary attraction between the delta-negative oxygen of one water molecule and the delta-positive hydrogen of another. Individually weak, collectively decisive."},{"id":"cohesion","label":"Cohesion","theme":"A","code":"A1.1","hl":false,"def":"Water molecules sticking to each other by hydrogen bonding, producing surface tension and unbroken water columns."},{"id":"adhesion","label":"Adhesion","theme":"A","code":"A1.1","hl":false,"def":"Water hydrogen-bonding to other polar surfaces, such as the walls of a xylem vessel."},{"id":"solvent","label":"Water as a solvent","theme":"A","code":"A1.1","hl":false,"def":"Water dissolves polar and charged substances, making it the medium in which almost all metabolism happens."},{"id":"thermalprops","label":"Thermal & physical properties","theme":"A","code":"A1.1","hl":false,"def":"High specific heat, high thermal conductivity, buoyancy and viscosity - all consequences of hydrogen bonding, and all shaping habitats."},{"id":"hydrophobic","label":"Hydrophilic vs hydrophobic","theme":"A","code":"A1.1","hl":false,"def":"Polar or charged substances dissolve in water (hydrophilic); non-polar ones are excluded from it (hydrophobic). This single split organises cell structure."},{"id":"asteroid","label":"Asteroid theory of water","theme":"A","code":"A1.1","hl":true,"def":"Water-bearing asteroids colliding with the molten early Earth delivered water and cooled the surface. The deuterium-to-hydrogen ratio matches."},{"id":"goldilocks","label":"Goldilocks zone","theme":"A","code":"A1.1","hl":true,"def":"The orbital band around a star where temperatures allow liquid water, and therefore life, to persist."},{"id":"dna","label":"DNA","theme":"A","code":"A1.2","hl":false,"def":"A double helix of two antiparallel nucleotide strands that stores heritable information in its base sequence."},{"id":"rna","label":"RNA","theme":"A","code":"A1.2","hl":false,"def":"A single-stranded nucleic acid using ribose and uracil, working as messenger, transfer and ribosomal RNA."},{"id":"nucleotide","label":"Nucleotide","theme":"A","code":"A1.2","hl":false,"def":"The monomer of nucleic acids: a pentose sugar, a phosphate group and a nitrogenous base."},{"id":"basepair","label":"Complementary base pairing","theme":"A","code":"A1.2","hl":false,"def":"A pairs with T (or U in RNA), G pairs with C. This is why DNA can be copied and read accurately."},{"id":"celltheory","label":"Cell theory","theme":"A","code":"A2.2","hl":false,"def":"All organisms are made of cells, the cell is the smallest unit of life, and cells come only from pre-existing cells."},{"id":"prokaryote","label":"Prokaryotic cell","theme":"A","code":"A2.2","hl":false,"def":"A cell with no nucleus or membrane-bound organelles; DNA sits free in the cytoplasm as a nucleoid, with 70S ribosomes."},{"id":"eukaryote","label":"Eukaryotic cell","theme":"A","code":"A2.2","hl":false,"def":"A compartmentalised cell with a nucleus and membrane-bound organelles, allowing incompatible reactions to run at once."},{"id":"endosymbiosis","label":"Endosymbiotic theory","theme":"A","code":"A2.2","hl":true,"def":"Mitochondria and chloroplasts descend from free-living prokaryotes engulfed by an ancestral cell - they keep their own DNA and 70S ribosomes."},{"id":"originlife","label":"Origin of the first cells","theme":"A","code":"A2.1","hl":true,"def":"Simple organic molecules formed from inorganic ones, assembled into polymers, gained catalysis and were enclosed by membranes."},{"id":"evolution","label":"Evolution","theme":"A","code":"A4.1","hl":false,"def":"The cumulative change in the heritable characteristics of a population over generations."},{"id":"natselect","label":"Natural selection","theme":"A","code":"D4.1","hl":false,"def":"Heritable variation plus overproduction plus differential survival: the individuals whose traits fit the environment leave more offspring."},{"id":"speciation","label":"Speciation","theme":"A","code":"A4.1","hl":false,"def":"The formation of a new species when populations become reproductively isolated for long enough to diverge."},{"id":"allopatric","label":"Allopatric speciation","theme":"A","code":"A4.1","hl":false,"def":"Speciation driven by a physical or geographical barrier separating populations."},{"id":"sympatric","label":"Sympatric speciation","theme":"A","code":"A4.1","hl":false,"def":"Speciation without physical separation - temporal or behavioural isolation splits a population sharing one location."},{"id":"reproisolation","label":"Reproductive isolation","theme":"A","code":"A4.1","hl":false,"def":"Any barrier - geographical, temporal or behavioural - that stops two populations interbreeding."},{"id":"adaptiveradiation","label":"Adaptive radiation","theme":"A","code":"A4.1","hl":false,"def":"Many distinct species evolving rapidly from one ancestor as members of a varied population occupy different niches."},{"id":"hybridisation","label":"Hybridisation","theme":"A","code":"A4.1","hl":true,"def":"Fertilisation between two different species. The chromosome mismatch usually makes the hybrid sterile - mules, ligers, zorses."},{"id":"polyploidy","label":"Polyploidy","theme":"A","code":"A4.1","hl":true,"def":"Cells carrying three or more chromosome sets. Common in plants, it can create a new species abruptly, in one generation."},{"id":"homologous","label":"Homologous structures","theme":"A","code":"A4.1","hl":false,"def":"Features alike in structure but different in function, such as the pentadactyl limb. Evidence of a common ancestor."},{"id":"analogous","label":"Analogous structures","theme":"A","code":"A4.1","hl":false,"def":"Features alike in function but different in structure, such as the fins of a shark and an orca. No recent common ancestor."},{"id":"convergent","label":"Convergent evolution","theme":"A","code":"A4.1","hl":false,"def":"Unrelated species evolving similar traits under similar selective pressures."},{"id":"divergent","label":"Divergent evolution","theme":"A","code":"A4.1","hl":false,"def":"Two or more species accumulating differences from a shared ancestor and becoming more distinct."},{"id":"selectivebreeding","label":"Selective breeding","theme":"A","code":"A4.1","hl":false,"def":"Humans choosing which organisms reproduce, as with teosinte to maize or wolves to dog breeds. Evolution on a visible timescale."},{"id":"molecularevidence","label":"Molecular evidence","theme":"A","code":"A4.1","hl":false,"def":"Differences in DNA and protein sequences accumulate over time, so sequence similarity measures how recently species shared an ancestor."},{"id":"carbon","label":"Carbon chemistry","theme":"B","code":"B1.1","hl":false,"def":"Carbon forms four covalent bonds, so it can build long chains, branches and rings - the skeleton of every macromolecule."},{"id":"macromolecule","label":"Monomers & polymers","theme":"B","code":"B1.1","hl":false,"def":"Small repeating subunits (monomers) joined into large molecules (polymers): monosaccharides, amino acids, nucleotides, fatty acids."},{"id":"condensation","label":"Condensation reaction","theme":"B","code":"B1.1","hl":false,"def":"Two monomers join with a covalent bond and one water molecule is released. Builds every polymer in the cell."},{"id":"hydrolysis","label":"Hydrolysis","theme":"B","code":"B1.1","hl":false,"def":"Water is added to split a covalent bond, breaking a polymer back into monomers. Digestion in one word."},{"id":"monosaccharide","label":"Monosaccharide","theme":"B","code":"B1.1","hl":false,"def":"Single sugars with the general formula CnH2nOn, including the hexose glucose and the pentose ribose."},{"id":"glucose","label":"Glucose","theme":"B","code":"B1.1","hl":false,"def":"The central hexose sugar: soluble, transportable, chemically stable, and the main substrate of respiration."},{"id":"glucoseisomers","label":"Alpha & beta glucose","theme":"B","code":"B1.1","hl":false,"def":"Two isomers differing only in whether the OH on carbon 1 sits below or above the ring - and that tiny difference decides starch versus cellulose."},{"id":"disaccharide","label":"Disaccharide","theme":"B","code":"B1.1","hl":false,"def":"Two monosaccharides joined by a glycosidic bond: maltose, lactose and sucrose."},{"id":"polysaccharide","label":"Polysaccharide","theme":"B","code":"B1.1","hl":false,"def":"Many monosaccharides joined into storage or structural molecules."},{"id":"starch","label":"Starch","theme":"B","code":"B1.1","hl":false,"def":"The plant storage polysaccharide: helical amylose plus branched amylopectin, both from alpha glucose."},{"id":"glycogen","label":"Glycogen","theme":"B","code":"B1.1","hl":false,"def":"The animal storage polysaccharide - more branched than amylopectin, so it can be hydrolysed quickly when glucose is needed."},{"id":"cellulose","label":"Cellulose","theme":"B","code":"B1.1","hl":false,"def":"A straight, unbranched beta glucose polymer. Alternate molecules flip, letting hydrogen bonds link chains into strong microfibrils."},{"id":"lipid","label":"Lipid","theme":"B","code":"B1.1","hl":false,"def":"Non-polar molecules - fats, oils, waxes and steroids - used for storage, insulation, membranes and signalling."},{"id":"fattyacid","label":"Fatty acid","theme":"B","code":"B1.1","hl":false,"def":"A hydrocarbon tail with a carboxyl group at one end. Chain length and double bonds set the melting point."},{"id":"saturation","label":"Saturated & unsaturated","theme":"B","code":"B1.1","hl":false,"def":"Saturated tails are straight and pack tightly (solid fats); unsaturated tails kink at each double bond and stay liquid (oils)."},{"id":"triglyceride","label":"Triglyceride","theme":"B","code":"B1.1","hl":false,"def":"Three fatty acids ester-bonded to one glycerol. The densest energy store in the body."},{"id":"phospholipid","label":"Phospholipid","theme":"B","code":"B1.1","hl":false,"def":"Two fatty acids and a phosphate on glycerol - a molecule with a water-loving head and water-fearing tails."},{"id":"cholesterol","label":"Cholesterol","theme":"B","code":"B1.1","hl":false,"def":"A steroid lipid with a small hydrophilic region, able to sit inside membranes and cross them."},{"id":"steroidhormone","label":"Steroid hormone","theme":"B","code":"B1.1","hl":false,"def":"Testosterone, oestradiol and relatives, built from cholesterol by gonadal tissue."},{"id":"glycoprotein","label":"Glycoprotein & glycolipid","theme":"B","code":"B1.1","hl":false,"def":"Carbohydrate chains attached to membrane proteins or lipids, used for recognition, signalling and adhesion."},{"id":"aminoacid","label":"Amino acid","theme":"B","code":"B1.2","hl":false,"def":"The monomer of proteins: a central carbon carrying an amine group, a carboxyl group, a hydrogen and a variable R group."},{"id":"rgroup","label":"R group","theme":"B","code":"B1.2","hl":true,"def":"The 20 amino acids differ only here. R groups are non-polar, polar, or ionised - and that chemistry dictates how a chain folds."},{"id":"peptidebond","label":"Peptide bond","theme":"B","code":"B1.2","hl":false,"def":"The covalent link formed by condensation between the carboxyl group of one amino acid and the amine group of the next."},{"id":"polypeptide","label":"Polypeptide","theme":"B","code":"B1.2","hl":false,"def":"A chain of many amino acids linked by peptide bonds."},{"id":"primary","label":"Primary structure","theme":"B","code":"B1.2","hl":true,"def":"The number and sequence of amino acids, set by the gene. Everything above it follows from this."},{"id":"secondary","label":"Secondary structure","theme":"B","code":"B1.2","hl":true,"def":"Alpha helices and beta pleated sheets held by hydrogen bonds between the carboxyl and amine groups of non-adjacent amino acids."},{"id":"tertiary","label":"Tertiary structure","theme":"B","code":"B1.2","hl":true,"def":"The full 3D shape, held by R group interactions: hydrogen bonds, ionic bonds, disulfide bridges and hydrophobic clustering."},{"id":"quaternary","label":"Quaternary structure","theme":"B","code":"B1.2","hl":true,"def":"Two or more polypeptides bound into one functional protein, sometimes with a non-protein group such as haem."},{"id":"denaturation","label":"Denaturation","theme":"B","code":"B1.2","hl":false,"def":"Unsuitable temperature or pH alters the 3D structure, so the protein loses its function. Peptide bonds stay intact."},{"id":"globularfibrous","label":"Globular vs fibrous","theme":"B","code":"B1.2","hl":true,"def":"Globular proteins are roughly spherical, soluble and functional; fibrous proteins are long, insoluble and structural."},{"id":"haemoglobin","label":"Haemoglobin","theme":"B","code":"B1.2","hl":false,"def":"A conjugated quaternary protein of four polypeptides, each with an iron-containing haem group that reversibly binds one oxygen."},{"id":"collagen","label":"Collagen","theme":"B","code":"B1.2","hl":false,"def":"A fibrous protein of three helical chains giving tensile strength to tendons and ligaments and elasticity to skin."},{"id":"insulin","label":"Insulin","theme":"B","code":"B1.2","hl":false,"def":"A small protein hormone from pancreatic beta cells that lowers blood glucose. Made as pre-proinsulin and cut into shape."},{"id":"keratin","label":"Keratin","theme":"B","code":"B1.2","hl":false,"def":"A fibrous structural protein forming hair, nails, claws and hooves."},{"id":"histone","label":"Histone","theme":"B","code":"B1.2","hl":false,"def":"Nuclear proteins that DNA supercoils around to package chromosomes."},{"id":"membrane","label":"Phospholipid bilayer","theme":"B","code":"B2.1","hl":false,"def":"Two sheets of phospholipids with hydrophilic heads facing the water and hydrophobic tails facing each other. The basic membrane of every cell."},{"id":"fluidmosaic","label":"Fluid mosaic model","theme":"B","code":"B2.1","hl":false,"def":"A fluid bilayer studded with a mosaic of proteins that drift within it."},{"id":"amphipathic","label":"Amphipathic molecules","theme":"B","code":"B1.1","hl":false,"def":"Molecules with both a polar and a non-polar region, so they sit at the boundary between water and oil."},{"id":"membraneprotein","label":"Membrane protein","theme":"B","code":"B2.1","hl":false,"def":"Integral and peripheral proteins acting as channels, pumps, receptors, enzymes and recognition markers."},{"id":"simplediffusion","label":"Simple diffusion","theme":"B","code":"B2.1","hl":false,"def":"Small non-polar molecules such as oxygen and carbon dioxide passing straight through the bilayer down their concentration gradient."},{"id":"faciliteddiffusion","label":"Facilitated diffusion","theme":"B","code":"B2.1","hl":false,"def":"Polar or charged particles crossing through channel or carrier proteins, still down the gradient and still without ATP."},{"id":"osmosis","label":"Osmosis","theme":"B","code":"B2.1","hl":false,"def":"Net movement of water across a partially permeable membrane from higher to lower water potential."},{"id":"waterpotential","label":"Water potential","theme":"B","code":"D2.3","hl":true,"def":"The tendency of water to leave a solution. Adding solute lowers it; hypertonic, hypotonic and isotonic describe the comparison."},{"id":"activetransport","label":"Active transport","theme":"B","code":"B2.1","hl":false,"def":"Pump proteins moving substances against the concentration gradient, paid for with ATP."},{"id":"bulktransport","label":"Endocytosis & exocytosis","theme":"B","code":"B2.1","hl":false,"def":"Moving large loads by wrapping them in vesicles of membrane, in or out."},{"id":"mitochondrion","label":"Mitochondrion","theme":"B","code":"B2.2","hl":false,"def":"The organelle of aerobic respiration: a matrix for the Krebs cycle, and a folded inner membrane packed with electron carriers."},{"id":"chloroplast","label":"Chloroplast","theme":"B","code":"B2.2","hl":false,"def":"The organelle of photosynthesis: stacked thylakoids for the light-dependent reactions and a fluid stroma for the Calvin cycle."},{"id":"nucleus","label":"Nucleus","theme":"B","code":"B2.2","hl":false,"def":"The compartment holding the DNA, where transcription and splicing happen away from the ribosomes."},{"id":"ribosome","label":"Ribosome","theme":"B","code":"B2.2","hl":false,"def":"The two-subunit structure of rRNA and protein where mRNA is translated into a polypeptide."},{"id":"er","label":"Endoplasmic reticulum","theme":"B","code":"B2.2","hl":false,"def":"Rough ER studded with ribosomes processes proteins for secretion; smooth ER handles lipids."},{"id":"golgi","label":"Golgi apparatus","theme":"B","code":"B2.2","hl":false,"def":"Modifies, sorts and packages proteins into vesicles for export."},{"id":"lysosome","label":"Lysosome","theme":"B","code":"B2.2","hl":false,"def":"A vesicle of hydrolytic enzymes, including proteases that break peptide bonds."},{"id":"differentiation","label":"Differentiation","theme":"B","code":"B2.3","hl":false,"def":"Cells switching some genes on and others off, so identical genomes produce over 200 cell types."},{"id":"stemcell","label":"Stem cell","theme":"B","code":"B2.3","hl":false,"def":"Unspecialised cells that can divide indefinitely and still differentiate. In plants they sit in meristems."},{"id":"morphogen","label":"Morphogen","theme":"B","code":"B2.3","hl":true,"def":"Signal molecules forming concentration gradients in the embryo, telling cells in different regions which genes to express."},{"id":"rbc","label":"Red blood cell","theme":"B","code":"B2.3","hl":false,"def":"Biconcave, nucleus-free and flexible - shape, space and size all sacrificed to carrying haemoglobin."},{"id":"alveolus","label":"Alveolus","theme":"B","code":"B3.1","hl":false,"def":"Thin-walled air sacs with a huge surface area and dense capillaries, where oxygen enters the blood and carbon dioxide leaves."},{"id":"musclefibre","label":"Muscle fibre","theme":"B","code":"B2.3","hl":false,"def":"Cardiac, skeletal and smooth cells specialised to shorten, packed with mitochondria to pay for contraction."},{"id":"gamete","label":"Gamete","theme":"B","code":"B2.3","hl":false,"def":"Haploid sex cells. The sperm is stripped down for swimming; the egg is stocked for development."},{"id":"meristem","label":"Meristem","theme":"B","code":"B2.3","hl":false,"def":"Regions of undifferentiated dividing plant cells at root and shoot tips (apical) and at the sides (lateral)."},{"id":"circulation","label":"Double circulation","theme":"B","code":"B3.2","hl":false,"def":"Blood passes through the heart twice: pulmonary circulation to the lungs, systemic circulation to the body."},{"id":"artery","label":"Artery","theme":"B","code":"B3.2","hl":false,"def":"Thick, muscular, elastic vessels carrying blood away from the heart. They stretch under each beat and recoil between beats."},{"id":"vein","label":"Vein","theme":"B","code":"B3.2","hl":false,"def":"Thin-walled, large-lumen vessels returning blood to the heart, with valves preventing backflow."},{"id":"capillary","label":"Capillary","theme":"B","code":"B3.2","hl":false,"def":"One cell thick, highly branched and permeable - the only vessels where exchange actually happens."},{"id":"chd","label":"Coronary heart disease","theme":"B","code":"B3.2","hl":false,"def":"Plaque narrowing the coronary arteries so cardiac muscle is starved of oxygen. A multifactorial disease."},{"id":"xylem","label":"Xylem","theme":"B","code":"B3.2","hl":false,"def":"Dead, hollow cell walls forming pipes that carry water and minerals up from the roots."},{"id":"phloem","label":"Phloem","theme":"B","code":"B3.2","hl":false,"def":"Living tissue transporting sugars from the leaves to the rest of the plant."},{"id":"transpiration","label":"Transpiration","theme":"B","code":"B3.2","hl":false,"def":"Evaporation of water from leaves through open stomata, creating the negative pressure that pulls the whole water column up."},{"id":"gasexchange","label":"Gas exchange","theme":"B","code":"B3.1","hl":false,"def":"Oxygen moving into the blood and carbon dioxide out, across a thin, moist, well-ventilated surface with a big area."},{"id":"enzyme","label":"Enzyme","theme":"C","code":"C1.1","hl":false,"def":"Biological catalysts, almost always globular proteins, that speed up reactions by lowering activation energy without being changed."},{"id":"activesite","label":"Active site","theme":"C","code":"C1.1","hl":false,"def":"The pocket on an enzyme whose shape is complementary to the substrate. Shape decides specificity, and shape comes from folding."},{"id":"inducedfit","label":"Induced fit model","theme":"C","code":"C1.1","hl":false,"def":"Enzyme and substrate change shape slightly on binding, giving a closer fit and straining the substrate's bonds. It replaced lock and key."},{"id":"activationenergy","label":"Activation energy","theme":"C","code":"C1.1","hl":false,"def":"The energy needed to destabilise existing bonds so a reaction can proceed. Catalysts lower it in both directions."},{"id":"collisiontheory","label":"Collision theory","theme":"C","code":"C1.1","hl":false,"def":"Reactants must collide with enough energy and in the correct orientation for a reaction to happen."},{"id":"catabolism","label":"Catabolism","theme":"C","code":"C1.1","hl":false,"def":"Breaking macromolecules into monomers, releasing energy. Exergonic - products are more stable than reactants."},{"id":"anabolism","label":"Anabolism","theme":"C","code":"C1.1","hl":false,"def":"Building macromolecules from monomers, which costs energy. Endergonic - products hold more chemical energy."},{"id":"enzymefactors","label":"Temperature, pH & substrate","theme":"C","code":"C1.1","hl":false,"def":"Rate rises with temperature and substrate concentration until denaturation or saturation of active sites caps it. Every enzyme has an optimum pH."},{"id":"inhibition","label":"Enzyme inhibition","theme":"C","code":"C1.1","hl":true,"def":"Competitive inhibitors block the active site and can be outcompeted; non-competitive ones bind an allosteric site; mechanism-based ones bind irreversibly."},{"id":"feedbackinhibition","label":"Feedback inhibition","theme":"C","code":"C1.1","hl":true,"def":"The end product of a pathway inhibits the enzyme catalysing the first step, so the cell stops making what it already has."},{"id":"cofactor","label":"Cofactor","theme":"C","code":"C1.1","hl":true,"def":"Non-protein helpers, often inorganic ions or vitamins, that an enzyme needs before it will work."},{"id":"metabolicpathway","label":"Metabolic pathway","theme":"C","code":"C1.1","hl":true,"def":"Chains or cycles of reactions, each step with its own specific enzyme. Glycolysis is linear; the Krebs cycle is cyclical."},{"id":"respiration","label":"Cell respiration","theme":"C","code":"C1.2","hl":false,"def":"The controlled, stepwise breakdown of nutrients to release energy as ATP. A redox process throughout."},{"id":"glycolysis","label":"Glycolysis","theme":"C","code":"C1.2","hl":true,"def":"In the cytoplasm: glucose is phosphorylated, split into two triose phosphates, oxidised and converted to two pyruvate. Net yield 2 ATP and 2 NADH."},{"id":"linkreaction","label":"Link reaction","theme":"C","code":"C1.2","hl":true,"def":"In the matrix: pyruvate is decarboxylated and oxidised to a 2-carbon acetyl group, which joins coenzyme A. Yields NADH and CO2."},{"id":"krebs","label":"Krebs cycle","theme":"C","code":"C1.2","hl":true,"def":"Acetyl CoA joins oxaloacetate to form citrate, which is decarboxylated and oxidised back to oxaloacetate. Runs twice per glucose."},{"id":"etc","label":"Electron transport chain","theme":"C","code":"C1.2","hl":true,"def":"Electrons from NADH and FADH2 pass down carriers in the inner mitochondrial membrane, and the energy released pumps protons into the intermembrane space."},{"id":"chemiosmosis","label":"Chemiosmosis","theme":"C","code":"C1.2","hl":true,"def":"Protons flow back down their gradient through ATP synthase, and that flow phosphorylates ADP into ATP."},{"id":"atpsynthase","label":"ATP synthase","theme":"C","code":"C1.2","hl":true,"def":"The membrane enzyme that converts the energy of a proton gradient into the chemical bond energy of ATP."},{"id":"protongradient","label":"Proton gradient","theme":"C","code":"C1.2","hl":true,"def":"A store of potential energy created by pumping H+ across a membrane. Made the same way in mitochondria and chloroplasts."},{"id":"nadh","label":"NADH","theme":"C","code":"C1.2","hl":true,"def":"The reduced carrier that ferries hydrogen and electrons from glycolysis, the link reaction and the Krebs cycle to the chain. Worth about 2.5 ATP."},{"id":"fadh2","label":"FADH2","theme":"C","code":"C1.2","hl":true,"def":"A reduced carrier from the Krebs cycle that joins the chain later than NADH, so it yields about 1.5 ATP."},{"id":"redox","label":"Redox reaction","theme":"C","code":"C1.2","hl":true,"def":"Oxidation is loss of electrons and hydrogen; reduction is gain. They always happen together, and energy moves with the electrons."},{"id":"oxygen","label":"Oxygen as final acceptor","theme":"C","code":"C1.2","hl":true,"def":"Oxygen takes the spent electrons and two protons at the end of the chain to form water. Without it the chain backs up and stops."},{"id":"anaerobic","label":"Anaerobic respiration","theme":"C","code":"C1.2","hl":false,"def":"Without oxygen, pyruvate is converted to lactate in animals or to ethanol and CO2 in yeast, purely to regenerate NAD+ so glycolysis can continue."},{"id":"atp","label":"ATP","theme":"C","code":"C1.2","hl":false,"def":"The cell's usable energy currency, spent on active transport, anabolism, movement and signalling."},{"id":"substrates","label":"Other respiratory substrates","theme":"C","code":"C1.2","hl":true,"def":"Lipids, glycerol, amino acids and other sugars enter respiration at different points. Lipids give about 20% more ATP per gram."},{"id":"photosynthesis","label":"Photosynthesis","theme":"C","code":"C1.3","hl":false,"def":"Building organic molecules from carbon dioxide and water using light energy. The reverse equation of respiration."},{"id":"lightdependent","label":"Light-dependent reactions","theme":"C","code":"C1.3","hl":false,"def":"In the thylakoid membranes: light excites electrons, water is split, and ATP and NADPH are generated."},{"id":"photolysis","label":"Photolysis","theme":"C","code":"C1.3","hl":false,"def":"Light splitting water to replace the electrons lost by photosystem II, releasing protons and oxygen as waste."},{"id":"photosystem","label":"Photosystems I & II","theme":"C","code":"C1.3","hl":true,"def":"Pigment complexes that funnel light energy to a chlorophyll a reaction centre. PSII (P680) starts the chain; PSI (P700) reduces NADP+."},{"id":"photophosphorylation","label":"Photophosphorylation","theme":"C","code":"C1.3","hl":true,"def":"ATP synthesis driven by a proton gradient across the thylakoid membrane. Non-cyclic yields ATP, NADPH and O2; cyclic yields ATP only."},{"id":"calvin","label":"Calvin cycle","theme":"C","code":"C1.3","hl":false,"def":"In the stroma: carbon dioxide is fixed onto RuBP, reduced to triose phosphate using ATP and NADPH, and RuBP is regenerated."},{"id":"rubisco","label":"Rubisco","theme":"C","code":"C1.3","hl":true,"def":"The enzyme that fixes carbon dioxide onto RuBP - the most abundant enzyme on Earth and the bottleneck of the whole cycle."},{"id":"rubp","label":"RuBP","theme":"C","code":"C1.3","hl":true,"def":"The 5-carbon acceptor of carbon dioxide. Six turns of the cycle regenerate it and release enough triose phosphate for one glucose."},{"id":"gptp","label":"GP & triose phosphate","theme":"C","code":"C1.3","hl":true,"def":"The unstable 6-carbon product splits into two glycerate-3-phosphate, which ATP and NADPH reduce to triose phosphate."},{"id":"nadph","label":"NADPH","theme":"C","code":"C1.3","hl":true,"def":"The reduced carrier made by the light-dependent reactions and spent reducing GP in the Calvin cycle."},{"id":"chlorophyll","label":"Chlorophyll & pigments","theme":"C","code":"C1.3","hl":false,"def":"Chlorophyll a and b absorb violet-blue and red light and reflect green. Carotene and xanthophyll widen the range absorbed."},{"id":"spectra","label":"Absorption & action spectrum","theme":"C","code":"C1.3","hl":false,"def":"An absorption spectrum shows which wavelengths a pigment takes in; an action spectrum shows which wavelengths actually drive photosynthesis."},{"id":"chromatography","label":"Chromatography","theme":"C","code":"C1.3","hl":false,"def":"Separating leaf pigments by solubility in a solvent. The Rf value is distance moved by the pigment over distance moved by the solvent."},{"id":"limitingfactors","label":"Limiting factors","theme":"C","code":"C1.3","hl":false,"def":"Light intensity, carbon dioxide concentration and temperature each cap the rate. Beyond a plateau, adding more of one changes nothing."},{"id":"cellsignalling","label":"Cell signalling","theme":"C","code":"C2.1","hl":false,"def":"One cell releasing a chemical that changes the behaviour of another. No receptor means no response."},{"id":"ligand","label":"Ligand","theme":"C","code":"C2.1","hl":false,"def":"Molecules that bind reversibly to a receptor: hormones, neurotransmitters, cytokines and calcium ions."},{"id":"receptor","label":"Receptor","theme":"C","code":"C2.1","hl":false,"def":"Proteins with a binding site complementary to one ligand. Hydrophilic ligands bind surface receptors; hydrophobic ones cross the membrane."},{"id":"transduction","label":"Signal transduction","theme":"C","code":"C2.1","hl":true,"def":"The cascade of steps converting a signal at the membrane into a response inside the cell, often amplifying it hugely."},{"id":"hormone","label":"Hormone","theme":"C","code":"C2.1","hl":false,"def":"Chemical messengers released by endocrine cells into the blood, acting slowly on distant target cells."},{"id":"neurotransmitter","label":"Neurotransmitter","theme":"C","code":"C2.2","hl":false,"def":"Chemicals released from a neuron into a synapse, acting fast on immediate neighbours."},{"id":"neuron","label":"Neuron","theme":"C","code":"C2.2","hl":false,"def":"Cells specialised to carry electrical signals long distances along an axon."},{"id":"actionpotential","label":"Action potential","theme":"C","code":"C2.2","hl":false,"def":"A wave of depolarisation and repolarisation caused by sodium and potassium ions moving through voltage-gated channels."},{"id":"restingpotential","label":"Resting potential","theme":"C","code":"C2.2","hl":false,"def":"The negative charge held inside an axon at rest, maintained by the sodium-potassium pump using ATP."},{"id":"synapse","label":"Synapse","theme":"C","code":"C2.2","hl":false,"def":"The junction where an electrical signal becomes a chemical one: vesicles release neurotransmitter across the gap onto receptors."},{"id":"myelin","label":"Myelination","theme":"C","code":"C2.2","hl":true,"def":"An insulating sheath forcing the impulse to jump between nodes, so myelinated axons conduct far faster."},{"id":"nervoussystem","label":"Nervous system","theme":"C","code":"C3.1","hl":false,"def":"Fast, electrical, short-lived signalling to specific targets."},{"id":"endocrine","label":"Endocrine system","theme":"C","code":"C3.1","hl":false,"def":"Slow, chemical, longer-lasting signalling broadcast through the blood."},{"id":"hypothalamus","label":"Hypothalamus","theme":"C","code":"C3.1","hl":false,"def":"The brain's control centre for homeostasis - it senses deviations and commands the pituitary and the rest of the body."},{"id":"pituitary","label":"Pituitary gland","theme":"C","code":"C3.1","hl":false,"def":"The gland that translates hypothalamic instructions into hormones controlling other endocrine glands."},{"id":"kidney","label":"Kidney & nephron","theme":"C","code":"C3.1","hl":false,"def":"Filters blood and adjusts water and solute loss, keeping blood composition steady."},{"id":"pathogen","label":"Pathogen","theme":"C","code":"C3.2","hl":false,"def":"Organisms or viruses that cause disease - bacteria, viruses, fungi, protists."},{"id":"antigen","label":"Antigen","theme":"C","code":"C3.2","hl":false,"def":"Molecules, usually surface proteins or glycoproteins, recognised as self or non-self."},{"id":"antibody","label":"Antibody","theme":"C","code":"C3.2","hl":false,"def":"Proteins made by plasma cells that bind one specific antigen and mark it for destruction."},{"id":"bcell","label":"B-cell & plasma cell","theme":"C","code":"C3.2","hl":false,"def":"Lymphocytes that recognise an antigen, clone themselves and secrete antibodies. Memory cells make the second response fast."},{"id":"tcell","label":"T-cell","theme":"C","code":"C3.2","hl":false,"def":"Lymphocytes that activate B-cells and coordinate the immune response. Their loss is what makes HIV dangerous."},{"id":"phagocyte","label":"Phagocyte","theme":"C","code":"C3.2","hl":false,"def":"White blood cells that engulf pathogens by endocytosis and digest them with lysosomal enzymes."},{"id":"vaccine","label":"Vaccine","theme":"C","code":"C3.2","hl":false,"def":"A safe first exposure to an antigen, so memory cells exist before the real pathogen arrives."},{"id":"herdimmunity","label":"Herd immunity","theme":"C","code":"C3.2","hl":false,"def":"When enough of a population is immune, transmission slows so much that unvaccinated individuals are protected too."},{"id":"abo","label":"ABO blood group","theme":"C","code":"C3.2","hl":false,"def":"Glycoprotein antigens on red blood cells. You make antibodies against the antigens you lack, which is why transfusions must match."},{"id":"agglutination","label":"Agglutination","theme":"C","code":"C3.2","hl":false,"def":"Recipient antibodies binding donor red blood cells and clumping them, blocking vessels. The danger of a mismatched transfusion."},{"id":"hiv","label":"HIV & AIDS","theme":"C","code":"C3.2","hl":false,"def":"A virus that destroys T-cells. Once their number falls far enough, opportunistic infections take hold and the disease is AIDS."},{"id":"antibiotic","label":"Antibiotic","theme":"C","code":"C3.2","hl":false,"def":"Drugs targeting bacterial cell walls and 70S ribosomes. They cannot touch viruses, and they leave our 80S ribosomes alone."},{"id":"zoonotic","label":"Zoonotic disease","theme":"C","code":"C3.2","hl":false,"def":"A pathogen crossing from another species into humans - rabies, tuberculosis, Covid-19."},{"id":"dnareplication","label":"DNA replication","theme":"D","code":"D1.1","hl":false,"def":"Semi-conservative copying: the helix unwinds, each strand templates a new partner, and each daughter molecule keeps one old strand."},{"id":"helicasepol","label":"Helicase & DNA polymerase","theme":"D","code":"D1.1","hl":false,"def":"Helicase unwinds and separates the strands; DNA polymerase adds complementary nucleotides in the 5' to 3' direction."},{"id":"pcr","label":"PCR","theme":"D","code":"D1.1","hl":false,"def":"Replication run in a machine to amplify a DNA sample, using heat to separate strands and a heat-stable polymerase."},{"id":"transcription","label":"Transcription","theme":"D","code":"D1.2","hl":false,"def":"Copying a gene into mRNA in the nucleus. RNA polymerase binds the promoter and reads the antisense strand 5' to 3'."},{"id":"rnapolymerase","label":"RNA polymerase","theme":"D","code":"D1.2","hl":false,"def":"The enzyme that unwinds DNA and assembles mRNA by complementary base pairing until it reaches the terminator."},{"id":"transcriptionfactor","label":"Transcription factor","theme":"D","code":"D1.2","hl":true,"def":"Regulatory proteins binding non-coding regions to activate or repress a gene. The main switch of gene expression in eukaryotes."},{"id":"mrna","label":"mRNA","theme":"D","code":"D1.2","hl":false,"def":"The transcript carrying a gene's message from nucleus to ribosome."},{"id":"splicing","label":"Splicing","theme":"D","code":"D1.2","hl":true,"def":"Spliceosomes cut introns out of pre-mRNA and join the exons, producing mature mRNA. Prokaryotes skip this - they have no introns."},{"id":"altsplicing","label":"Alternative splicing","theme":"D","code":"D1.2","hl":true,"def":"Removing some exons as well, so one gene can yield several different proteins - tropomyosin differs between muscle types this way."},{"id":"capptail","label":"5' cap & poly-A tail","theme":"D","code":"D1.2","hl":true,"def":"Added to mature mRNA to allow nuclear export, protect it from degradation and help ribosomes start translation."},{"id":"translation","label":"Translation","theme":"D","code":"D1.2","hl":false,"def":"Ribosomes read mRNA codon by codon and build the matching amino acid sequence, through initiation, elongation and termination."},{"id":"trna","label":"tRNA","theme":"D","code":"D1.2","hl":false,"def":"A clover-shaped RNA carrying one amino acid at one end and the complementary anticodon at the other."},{"id":"codon","label":"Codon & anticodon","theme":"D","code":"D1.2","hl":false,"def":"Three consecutive mRNA bases specify one amino acid. AUG starts; UAA, UAG and UGA stop."},{"id":"geneticcode","label":"The genetic code","theme":"D","code":"D1.2","hl":false,"def":"Degenerate, because several codons can specify one amino acid, and universal, because it is shared across life."},{"id":"posttranslational","label":"Post-translational modification","theme":"D","code":"D1.2","hl":true,"def":"Cutting, folding, glycosylation and disulfide bonding turn a raw polypeptide into a working protein - pre-proinsulin becomes insulin."},{"id":"proteasome","label":"Ubiquitin & proteasome","theme":"D","code":"D1.2","hl":true,"def":"Ubiquitin tags worn or unwanted proteins, and the proteasome dismantles them back into reusable amino acids."},{"id":"noncodingdna","label":"Non-coding DNA","theme":"D","code":"D1.2","hl":true,"def":"About 99% of the genome. It includes promoters, enhancers, silencers, introns, telomeres and the genes for tRNA and rRNA."},{"id":"geneexpression","label":"Gene expression","theme":"D","code":"D2.2","hl":false,"def":"Which genes a cell actually uses. Every cell holds the whole genome but reads only the part its role requires."},{"id":"mutation","label":"Mutation","theme":"D","code":"D1.3","hl":false,"def":"A permanent change to a DNA base sequence, because replication is not perfect."},{"id":"pointmutation","label":"Point mutation","theme":"D","code":"D1.3","hl":false,"def":"A single base substitution. It can change one codon, one amino acid, and therefore the whole protein."},{"id":"sicklecell","label":"Sickle cell disease","theme":"D","code":"D1.3","hl":false,"def":"One base change in the haemoglobin gene swaps one amino acid, so red cells sickle, block vessels and carry oxygen poorly."},{"id":"mutagen","label":"Mutagen","theme":"D","code":"D1.3","hl":false,"def":"External agents such as radiation or cigarette smoke that raise the mutation rate."},{"id":"cellcycle","label":"The cell cycle","theme":"D","code":"D2.1","hl":false,"def":"Interphase (G1, S, G2) for growth and DNA replication, then mitosis and cytokinesis. Some cells exit into a non-dividing G0."},{"id":"interphase","label":"Interphase","theme":"D","code":"D2.1","hl":false,"def":"The longest phase: the cell grows, replicates its organelles and copies its DNA, which stays uncondensed."},{"id":"mitosis","label":"Mitosis","theme":"D","code":"D2.1","hl":false,"def":"Prophase, metaphase, anaphase and telophase divide one nucleus into two genetically identical nuclei."},{"id":"cytokinesis","label":"Cytokinesis","theme":"D","code":"D2.1","hl":false,"def":"Division of the cytoplasm, completing the production of two separate cells."},{"id":"meiosis","label":"Meiosis","theme":"D","code":"D2.1","hl":false,"def":"Two divisions halving the chromosome number and producing four genetically different haploid cells."},{"id":"crossingover","label":"Crossing over","theme":"D","code":"D2.1","hl":false,"def":"Homologous chromosomes exchange segments in prophase I, creating new allele combinations on a chromosome."},{"id":"independentassort","label":"Independent assortment","theme":"D","code":"D2.1","hl":false,"def":"Homologous pairs line up independently in metaphase I, so maternal and paternal chromosomes are shuffled between gametes."},{"id":"cyclin","label":"Cyclin & CDK","theme":"D","code":"D2.1","hl":true,"def":"Cyclins accumulate and activate cyclin-dependent kinases, which phosphorylate targets and push the cell into the next phase."},{"id":"checkpoint","label":"Cell cycle checkpoint","theme":"D","code":"D2.1","hl":true,"def":"Control points, notably G1 and G2, that halt the cycle until conditions and DNA integrity are right."},{"id":"cancer","label":"Cancer","theme":"D","code":"D2.1","hl":false,"def":"Uncontrolled division producing a tumour. Benign tumours stay put; malignant ones invade and metastasise."},{"id":"oncogene","label":"Oncogene","theme":"D","code":"D2.1","hl":false,"def":"Mutated proto-oncogenes that tell a cell to divide too often or to skip apoptosis."},{"id":"tumoursuppressor","label":"Tumour suppressor gene","theme":"D","code":"D2.1","hl":false,"def":"Genes coding for proteins that restrain division and trigger apoptosis. Losing their function releases the brake."},{"id":"apoptosis","label":"Apoptosis","theme":"D","code":"D2.1","hl":false,"def":"Programmed cell death - a normal, controlled removal of cells that are damaged or no longer needed."},{"id":"mitoticindex","label":"Mitotic index","theme":"D","code":"D2.1","hl":false,"def":"Cells in mitosis divided by total cells. A high value means rapid proliferation and predicts response to chemotherapy."},{"id":"allele","label":"Allele","theme":"D","code":"D3.2","hl":false,"def":"Different versions of the same gene, occupying the same locus on homologous chromosomes."},{"id":"genotypephenotype","label":"Genotype & phenotype","theme":"D","code":"D3.2","hl":false,"def":"The alleles an organism carries, and the characteristics that result from them interacting with the environment."},{"id":"punnett","label":"Punnett grid","theme":"D","code":"D3.2","hl":false,"def":"A grid predicting the genotype ratios of offspring from the gametes each parent can make."},{"id":"sexlinkage","label":"Sex linkage","theme":"D","code":"D3.2","hl":false,"def":"Genes carried on the X chromosome. Males, with only one X, show recessive X-linked conditions far more often."},{"id":"pedigree","label":"Pedigree chart","theme":"D","code":"D3.2","hl":false,"def":"Family diagrams used to trace how an allele is inherited and to deduce unknown genotypes."},{"id":"variation","label":"Genetic variation","theme":"D","code":"D3.2","hl":false,"def":"The raw material of evolution, generated by mutation, crossing over, independent assortment and random fertilisation."},{"id":"homeostasis","label":"Homeostasis","theme":"D","code":"D3.3","hl":false,"def":"Keeping internal conditions within narrow limits despite a changing environment."},{"id":"negfeedback","label":"Negative feedback","theme":"D","code":"D3.3","hl":false,"def":"A deviation from the set point triggers a response that reverses it. The logic behind nearly every homeostatic system."},{"id":"bloodglucose","label":"Blood glucose regulation","theme":"D","code":"D3.3","hl":false,"def":"Beta cells release insulin when glucose is high; alpha cells release glucagon when it is low. Both act mainly on the liver."},{"id":"glucagon","label":"Glucagon","theme":"D","code":"D3.3","hl":false,"def":"A pancreatic hormone that raises blood glucose by breaking glycogen down and making new glucose."},{"id":"diabetes","label":"Diabetes","theme":"D","code":"D3.3","hl":false,"def":"Type I destroys the insulin-producing beta cells; type II leaves receptors unresponsive. Both end in hyperglycaemia."},{"id":"thermoregulation","label":"Thermoregulation","theme":"D","code":"D3.3","hl":false,"def":"Holding body temperature at a set point. Thermoreceptors report to the hypothalamus, which triggers heating or cooling."},{"id":"vasodilation","label":"Vasodilation & vasoconstriction","theme":"D","code":"D3.3","hl":false,"def":"Widening skin arterioles sheds heat; narrowing them conserves it by shunting blood to the core."},{"id":"thyroxine","label":"Thyroxine & shivering","theme":"D","code":"D3.3","hl":false,"def":"Thyroxine raises metabolic rate across the body, and shivering contracts muscles - both generate heat as a by-product."},{"id":"osmoregulation","label":"Osmoregulation","theme":"D","code":"D3.3","hl":false,"def":"Controlling the water and solute concentration of body fluids, mainly through the kidney."}],"links":[{"s":"water","t":"hbond","r":"is polar, so it forms","k":"makes"},{"s":"hbond","t":"cohesion","r":"holds water to water, producing","k":"makes"},{"s":"hbond","t":"adhesion","r":"holds water to other surfaces, producing","k":"makes"},{"s":"hbond","t":"solvent","r":"surrounds ions and polar molecules, giving","k":"makes"},{"s":"hbond","t":"thermalprops","r":"must be broken before water heats up, giving it its","k":"makes"},{"s":"water","t":"hydrophobic","r":"sorts every other molecule into","k":"makes"},{"s":"asteroid","t":"water","r":"delivered Earth's","k":"makes"},{"s":"goldilocks","t":"water","r":"keeps a planet's","k":"needs"},{"s":"water","t":"originlife","r":"was the medium required for","k":"needs"},{"s":"hydrophobic","t":"membrane","r":"drives the self-assembly of the","k":"makes"},{"s":"hydrophobic","t":"tertiary","r":"pushes non-polar R groups inward during","k":"makes"},{"s":"solvent","t":"metabolicpathway","r":"provides the medium for every","k":"needs"},{"s":"solvent","t":"glucose","r":"dissolves and transports","k":"part"},{"s":"thermalprops","t":"thermoregulation","r":"makes sweat an effective coolant in","k":"part"},{"s":"cohesion","t":"transpiration","r":"keeps the water column unbroken during","k":"needs"},{"s":"adhesion","t":"xylem","r":"holds water against the walls of the","k":"needs"},{"s":"water","t":"osmosis","r":"is the only substance that moves by","k":"part"},{"s":"water","t":"photolysis","r":"is the molecule split during","k":"needs"},{"s":"water","t":"respiration","r":"is a waste product of aerobic","k":"makes"},{"s":"water","t":"condensation","r":"is released by every","k":"makes"},{"s":"water","t":"hydrolysis","r":"is consumed by","k":"needs"},{"s":"nucleotide","t":"dna","r":"is the monomer of","k":"part"},{"s":"nucleotide","t":"rna","r":"is the monomer of","k":"part"},{"s":"condensation","t":"dna","r":"joins nucleotides by phosphodiester bonds into","k":"makes"},{"s":"basepair","t":"dna","r":"holds the two strands of","k":"part"},{"s":"basepair","t":"dnareplication","r":"makes accurate","k":"needs"},{"s":"basepair","t":"transcription","r":"makes accurate","k":"needs"},{"s":"dna","t":"histone","r":"supercoils around","k":"part"},{"s":"dna","t":"transcription","r":"is the template for","k":"needs"},{"s":"dna","t":"geneexpression","r":"is read selectively during","k":"part"},{"s":"dnareplication","t":"helicasepol","r":"is carried out by","k":"needs"},{"s":"dnareplication","t":"interphase","r":"happens in the S phase of","k":"part"},{"s":"dnareplication","t":"mutation","r":"is not perfect, so it produces","k":"makes"},{"s":"dnareplication","t":"pcr","r":"is the process copied by","k":"part"},{"s":"helicasepol","t":"enzyme","r":"are examples of","k":"part"},{"s":"celltheory","t":"prokaryote","r":"says life is built from cells such as","k":"part"},{"s":"celltheory","t":"eukaryote","r":"says life is built from cells such as","k":"part"},{"s":"originlife","t":"prokaryote","r":"produced the first","k":"makes"},{"s":"endosymbiosis","t":"mitochondrion","r":"explains the double membrane and own DNA of the","k":"evidence"},{"s":"endosymbiosis","t":"chloroplast","r":"explains the double membrane and own DNA of the","k":"evidence"},{"s":"prokaryote","t":"endosymbiosis","r":"was engulfed by a host cell according to","k":"evidence"},{"s":"eukaryote","t":"nucleus","r":"is defined by having a","k":"part"},{"s":"eukaryote","t":"mitochondrion","r":"is compartmentalised, containing the","k":"part"},{"s":"eukaryote","t":"er","r":"contains the","k":"part"},{"s":"eukaryote","t":"golgi","r":"contains the","k":"part"},{"s":"eukaryote","t":"lysosome","r":"contains the","k":"part"},{"s":"ribosome","t":"prokaryote","r":"is 70S in a","k":"part"},{"s":"natselect","t":"evolution","r":"is the mechanism driving","k":"makes"},{"s":"variation","t":"natselect","r":"supplies the raw material for","k":"needs"},{"s":"mutation","t":"variation","r":"is the ultimate source of","k":"makes"},{"s":"meiosis","t":"variation","r":"shuffles alleles to create","k":"makes"},{"s":"crossingover","t":"variation","r":"creates new allele combinations, adding to","k":"makes"},{"s":"independentassort","t":"variation","r":"randomises chromosome combinations, adding to","k":"makes"},{"s":"speciation","t":"reproisolation","r":"cannot begin without","k":"needs"},{"s":"reproisolation","t":"allopatric","r":"by a physical barrier causes","k":"makes"},{"s":"reproisolation","t":"sympatric","r":"by timing or behaviour causes","k":"makes"},{"s":"allopatric","t":"speciation","r":"is one route to","k":"part"},{"s":"sympatric","t":"speciation","r":"is one route to","k":"part"},{"s":"adaptiveradiation","t":"speciation","r":"fills different niches and multiplies","k":"makes"},{"s":"hybridisation","t":"reproisolation","r":"produces sterile offspring, reinforcing","k":"evidence"},{"s":"polyploidy","t":"speciation","r":"can cause abrupt","k":"makes"},{"s":"meiosis","t":"polyploidy","r":"fails to separate chromosomes, producing","k":"makes"},{"s":"homologous","t":"divergent","r":"show the same structure with different functions, evidence of","k":"evidence"},{"s":"analogous","t":"convergent","r":"show different structures with the same function, evidence of","k":"evidence"},{"s":"divergent","t":"adaptiveradiation","r":"is the pattern behind","k":"part"},{"s":"molecularevidence","t":"evolution","r":"measures how long ago species diverged, supporting","k":"evidence"},{"s":"dna","t":"molecularevidence","r":"accumulates differences over time, giving","k":"evidence"},{"s":"selectivebreeding","t":"natselect","r":"is the artificial version of","k":"evidence"},{"s":"selectivebreeding","t":"evolution","r":"demonstrates the speed of","k":"evidence"},{"s":"natselect","t":"antibiotic","r":"favours resistant bacteria, blunting","k":"evidence"},{"s":"mutation","t":"antibiotic","r":"can code for penicillinase and confer resistance to","k":"evidence"},{"s":"carbon","t":"macromolecule","r":"forms four covalent bonds, which is what allows","k":"needs"},{"s":"macromolecule","t":"condensation","r":"is built by","k":"needs"},{"s":"macromolecule","t":"hydrolysis","r":"is broken down by","k":"part"},{"s":"condensation","t":"anabolism","r":"is the reaction type behind","k":"part"},{"s":"hydrolysis","t":"catabolism","r":"is the reaction type behind","k":"part"},{"s":"monosaccharide","t":"glucose","r":"includes the hexose","k":"part"},{"s":"glucose","t":"glucoseisomers","r":"exists as the two","k":"part"},{"s":"condensation","t":"disaccharide","r":"joins two monosaccharides by a glycosidic bond into a","k":"makes"},{"s":"condensation","t":"polysaccharide","r":"repeated many times builds a","k":"makes"},{"s":"glucoseisomers","t":"starch","r":"in the alpha form builds","k":"makes"},{"s":"glucoseisomers","t":"glycogen","r":"in the alpha form builds","k":"makes"},{"s":"glucoseisomers","t":"cellulose","r":"in the beta form, with every other unit flipped, builds","k":"makes"},{"s":"polysaccharide","t":"starch","r":"includes the plant store","k":"part"},{"s":"polysaccharide","t":"glycogen","r":"includes the animal store","k":"part"},{"s":"polysaccharide","t":"cellulose","r":"includes the structural","k":"part"},{"s":"hbond","t":"cellulose","r":"links parallel chains into the microfibrils of","k":"makes"},{"s":"glucose","t":"respiration","r":"is the main substrate of","k":"needs"},{"s":"glucose","t":"bloodglucose","r":"is the solute monitored by","k":"part"},{"s":"glycogen","t":"glucagon","r":"is hydrolysed on the order of","k":"controls"},{"s":"starch","t":"photosynthesis","r":"is the storage product of","k":"makes"},{"s":"lipid","t":"triglyceride","r":"includes the storage form,","k":"part"},{"s":"lipid","t":"phospholipid","r":"includes the membrane form,","k":"part"},{"s":"lipid","t":"cholesterol","r":"includes the steroid","k":"part"},{"s":"lipid","t":"fattyacid","r":"is built from glycerol and","k":"part"},{"s":"fattyacid","t":"saturation","r":"differ in their","k":"part"},{"s":"saturation","t":"membrane","r":"alters the fluidity of the","k":"controls"},{"s":"condensation","t":"triglyceride","r":"forms three ester bonds to build a","k":"makes"},{"s":"triglyceride","t":"substrates","r":"is hydrolysed to feed respiration as one of the","k":"makes"},{"s":"lipid","t":"substrates","r":"gives about 20% more ATP per gram as one of the","k":"part"},{"s":"phospholipid","t":"amphipathic","r":"has a polar head and non-polar tails, so it is","k":"part"},{"s":"amphipathic","t":"membrane","r":"is why phospholipids spontaneously form a","k":"makes"},{"s":"phospholipid","t":"membrane","r":"is the building block of the","k":"part"},{"s":"cholesterol","t":"membrane","r":"sits between phospholipids and regulates the","k":"controls"},{"s":"cholesterol","t":"steroidhormone","r":"is the precursor of every","k":"makes"},{"s":"steroidhormone","t":"receptor","r":"is hydrophobic, so it crosses the membrane to an intracellular","k":"needs"},{"s":"glycoprotein","t":"membraneprotein","r":"is a carbohydrate-tagged","k":"part"},{"s":"glycoprotein","t":"antigen","r":"acts as a self-or-non-self","k":"part"},{"s":"aminoacid","t":"polypeptide","r":"is the monomer of a","k":"part"},{"s":"aminoacid","t":"rgroup","r":"differ only in their","k":"part"},{"s":"condensation","t":"peptidebond","r":"forms the","k":"makes"},{"s":"peptidebond","t":"polypeptide","r":"links amino acids into a","k":"makes"},{"s":"polypeptide","t":"primary","r":"has a sequence known as its","k":"part"},{"s":"primary","t":"secondary","r":"determines where the chain forms","k":"makes"},{"s":"secondary","t":"tertiary","r":"folds further into","k":"makes"},{"s":"tertiary","t":"quaternary","r":"chains combine into","k":"makes"},{"s":"rgroup","t":"tertiary","r":"interactions - hydrogen, ionic, disulfide and hydrophobic - hold the","k":"makes"},{"s":"hbond","t":"secondary","r":"between non-adjacent amino acids holds the alpha helix and beta sheet of","k":"makes"},{"s":"tertiary","t":"activesite","r":"gives the enzyme its precisely shaped","k":"makes"},{"s":"denaturation","t":"tertiary","r":"destroys the","k":"controls"},{"s":"denaturation","t":"enzyme","r":"stops the","k":"controls"},{"s":"tertiary","t":"globularfibrous","r":"determines whether a protein is","k":"part"},{"s":"globularfibrous","t":"enzyme","r":"classifies the globular","k":"part"},{"s":"haemoglobin","t":"quaternary","r":"has four polypeptides plus haem, so it has","k":"part"},{"s":"haemoglobin","t":"rbc","r":"fills the","k":"part"},{"s":"haemoglobin","t":"gasexchange","r":"reversibly binds oxygen, enabling","k":"needs"},{"s":"collagen","t":"globularfibrous","r":"is the classic fibrous case in","k":"part"},{"s":"keratin","t":"globularfibrous","r":"is a fibrous case in","k":"part"},{"s":"insulin","t":"hormone","r":"is a protein","k":"part"},{"s":"insulin","t":"bloodglucose","r":"lowers","k":"controls"},{"s":"histone","t":"mitosis","r":"packages chromosomes for","k":"needs"},{"s":"antibody","t":"quaternary","r":"is a globular protein with","k":"part"},{"s":"hydrolysis","t":"aminoacid","r":"of a protein releases","k":"makes"},{"s":"membrane","t":"fluidmosaic","r":"is described by the","k":"part"},{"s":"membrane","t":"membraneprotein","r":"is studded with","k":"part"},{"s":"membraneprotein","t":"faciliteddiffusion","r":"forms the channels and carriers of","k":"needs"},{"s":"membraneprotein","t":"activetransport","r":"forms the pumps of","k":"needs"},{"s":"membraneprotein","t":"receptor","r":"includes every surface","k":"part"},{"s":"membrane","t":"simplediffusion","r":"lets small non-polar molecules cross by","k":"part"},{"s":"membrane","t":"osmosis","r":"is the partially permeable barrier for","k":"needs"},{"s":"osmosis","t":"waterpotential","r":"moves water down a gradient of","k":"needs"},{"s":"activetransport","t":"atp","r":"is the only transport that spends","k":"needs"},{"s":"membrane","t":"bulktransport","r":"folds into vesicles during","k":"part"},{"s":"simplediffusion","t":"gasexchange","r":"carries oxygen and carbon dioxide during","k":"part"},{"s":"activetransport","t":"kidney","r":"reabsorbs solutes in the","k":"part"},{"s":"waterpotential","t":"osmoregulation","r":"is the quantity controlled by","k":"part"},{"s":"mitochondrion","t":"linkreaction","r":"hosts, in its matrix, the","k":"part"},{"s":"mitochondrion","t":"krebs","r":"hosts, in its matrix, the","k":"part"},{"s":"mitochondrion","t":"etc","r":"holds, in its inner membrane, the","k":"part"},{"s":"chloroplast","t":"lightdependent","r":"hosts, in its thylakoids, the","k":"part"},{"s":"chloroplast","t":"calvin","r":"hosts, in its stroma, the","k":"part"},{"s":"nucleus","t":"transcription","r":"is the compartment for","k":"part"},{"s":"nucleus","t":"splicing","r":"is the compartment for","k":"part"},{"s":"ribosome","t":"translation","r":"carries out","k":"part"},{"s":"er","t":"posttranslational","r":"begins the","k":"part"},{"s":"golgi","t":"posttranslational","r":"completes the","k":"part"},{"s":"golgi","t":"bulktransport","r":"packages proteins into vesicles for","k":"makes"},{"s":"lysosome","t":"hydrolysis","r":"contains enzymes for","k":"needs"},{"s":"lysosome","t":"phagocyte","r":"digests engulfed pathogens inside a","k":"part"},{"s":"geneexpression","t":"differentiation","r":"switches genes on and off to produce","k":"makes"},{"s":"stemcell","t":"differentiation","r":"retains the ability to undergo","k":"part"},{"s":"morphogen","t":"differentiation","r":"forms gradients that direct","k":"controls"},{"s":"meristem","t":"stemcell","r":"is the plant site of the","k":"part"},{"s":"differentiation","t":"rbc","r":"produces the","k":"makes"},{"s":"differentiation","t":"musclefibre","r":"produces the","k":"makes"},{"s":"differentiation","t":"alveolus","r":"produces the thin cells of the","k":"makes"},{"s":"differentiation","t":"neuron","r":"produces the","k":"makes"},{"s":"meiosis","t":"gamete","r":"produces every","k":"makes"},{"s":"musclefibre","t":"mitochondrion","r":"is packed with","k":"needs"},{"s":"stemcell","t":"mitosis","r":"self-renews by repeated","k":"needs"},{"s":"meristem","t":"xylem","r":"cells later differentiate into","k":"makes"},{"s":"meristem","t":"phloem","r":"cells later differentiate into","k":"makes"},{"s":"circulation","t":"artery","r":"carries blood away from the heart in","k":"part"},{"s":"circulation","t":"vein","r":"returns blood in","k":"part"},{"s":"circulation","t":"capillary","r":"exchanges materials in","k":"part"},{"s":"capillary","t":"gasexchange","r":"is thin enough for","k":"needs"},{"s":"artery","t":"chd","r":"narrowed by plaque causes","k":"evidence"},{"s":"rbc","t":"circulation","r":"carries oxygen around the","k":"part"},{"s":"alveolus","t":"gasexchange","r":"provides the surface for","k":"part"},{"s":"gasexchange","t":"respiration","r":"supplies the oxygen for aerobic","k":"needs"},{"s":"xylem","t":"transpiration","r":"carries the water lost in","k":"part"},{"s":"transpiration","t":"xylem","r":"creates the negative pressure that pulls water up the","k":"controls"},{"s":"phloem","t":"photosynthesis","r":"transports the sugars made by","k":"part"},{"s":"vasodilation","t":"artery","r":"widens or narrows skin arterioles branching from the","k":"controls"},{"s":"enzyme","t":"activationenergy","r":"works by lowering","k":"controls"},{"s":"activationenergy","t":"collisiontheory","r":"is the energy threshold set by","k":"part"},{"s":"enzyme","t":"activesite","r":"binds its substrate at the","k":"part"},{"s":"inducedfit","t":"activesite","r":"says the substrate reshapes the","k":"part"},{"s":"enzyme","t":"inducedfit","r":"is best described by the","k":"part"},{"s":"tertiary","t":"enzyme","r":"determines the specificity of every","k":"needs"},{"s":"enzyme","t":"catabolism","r":"catalyses the reactions of","k":"part"},{"s":"enzyme","t":"anabolism","r":"catalyses the reactions of","k":"part"},{"s":"enzymefactors","t":"enzyme","r":"set the rate of any","k":"controls"},{"s":"enzymefactors","t":"denaturation","r":"at extremes causes","k":"makes"},{"s":"inhibition","t":"enzyme","r":"reduces the activity of an","k":"controls"},{"s":"feedbackinhibition","t":"inhibition","r":"is end-product","k":"part"},{"s":"feedbackinhibition","t":"metabolicpathway","r":"switches off the first enzyme of a","k":"controls"},{"s":"feedbackinhibition","t":"negfeedback","r":"is the molecular version of","k":"part"},{"s":"cofactor","t":"enzyme","r":"is needed before some","k":"needs"},{"s":"metabolicpathway","t":"glycolysis","r":"includes linear ones such as","k":"part"},{"s":"metabolicpathway","t":"krebs","r":"includes cyclical ones such as","k":"part"},{"s":"metabolicpathway","t":"calvin","r":"includes cyclical ones such as","k":"part"},{"s":"enzyme","t":"rubisco","r":"includes","k":"part"},{"s":"enzyme","t":"rnapolymerase","r":"includes","k":"part"},{"s":"enzyme","t":"atpsynthase","r":"includes","k":"part"},{"s":"catabolism","t":"respiration","r":"releases energy through","k":"part"},{"s":"anabolism","t":"photosynthesis","r":"builds glucose through","k":"part"},{"s":"anabolism","t":"translation","r":"builds proteins through","k":"part"},{"s":"anabolism","t":"atp","r":"must be paid for with","k":"needs"},{"s":"respiration","t":"glycolysis","r":"begins with","k":"part"},{"s":"glycolysis","t":"linkreaction","r":"produces pyruvate for the","k":"makes"},{"s":"linkreaction","t":"krebs","r":"produces acetyl CoA for the","k":"makes"},{"s":"krebs","t":"etc","r":"hands its reduced carriers to the","k":"makes"},{"s":"etc","t":"protongradient","r":"pumps H+ across the inner membrane to build a","k":"makes"},{"s":"protongradient","t":"chemiosmosis","r":"is discharged during","k":"needs"},{"s":"chemiosmosis","t":"atpsynthase","r":"drives protons through","k":"needs"},{"s":"atpsynthase","t":"atp","r":"phosphorylates ADP into","k":"makes"},{"s":"etc","t":"oxygen","r":"ends by passing electrons to","k":"needs"},{"s":"oxygen","t":"water","r":"combines with electrons and protons to form","k":"makes"},{"s":"glycolysis","t":"nadh","r":"reduces NAD+ to","k":"makes"},{"s":"linkreaction","t":"nadh","r":"reduces NAD+ to","k":"makes"},{"s":"krebs","t":"nadh","r":"reduces NAD+ to","k":"makes"},{"s":"krebs","t":"fadh2","r":"reduces FAD to","k":"makes"},{"s":"nadh","t":"etc","r":"delivers electrons to the start of the","k":"needs"},{"s":"fadh2","t":"etc","r":"delivers electrons further along the","k":"needs"},{"s":"redox","t":"respiration","r":"is the chemistry underlying all of","k":"part"},{"s":"redox","t":"nadh","r":"is what charges and discharges","k":"part"},{"s":"glycolysis","t":"anaerobic","r":"continues without oxygen only because of","k":"needs"},{"s":"nadh","t":"anaerobic","r":"is oxidised back to NAD+ during","k":"needs"},{"s":"respiration","t":"atp","r":"exists to make","k":"makes"},{"s":"respiration","t":"mitochondrion","r":"is completed inside the","k":"needs"},{"s":"respiration","t":"thermoregulation","r":"releases heat as a by-product, feeding","k":"makes"},{"s":"substrates","t":"krebs","r":"let lipids and amino acids enter respiration at the","k":"part"},{"s":"atp","t":"activetransport","r":"pays for","k":"controls"},{"s":"atp","t":"restingpotential","r":"pays the sodium-potassium pump maintaining the","k":"controls"},{"s":"atp","t":"musclefibre","r":"pays for contraction in the","k":"controls"},{"s":"glycolysis","t":"atp","r":"makes a small net yield of","k":"makes"},{"s":"photosynthesis","t":"lightdependent","r":"begins with the","k":"part"},{"s":"lightdependent","t":"calvin","r":"supplies ATP and NADPH to the","k":"makes"},{"s":"lightdependent","t":"photolysis","r":"splits water by","k":"part"},{"s":"photolysis","t":"oxygen","r":"releases the","k":"makes"},{"s":"photosystem","t":"lightdependent","r":"absorb the light that starts the","k":"needs"},{"s":"chlorophyll","t":"photosystem","r":"is the pigment at the reaction centre of each","k":"part"},{"s":"chlorophyll","t":"spectra","r":"absorb red and blue and reflect green, giving their","k":"evidence"},{"s":"spectra","t":"chromatography","r":"is measured for pigments separated by","k":"needs"},{"s":"lightdependent","t":"protongradient","r":"pumps H+ into the thylakoid space to build a","k":"makes"},{"s":"photophosphorylation","t":"atpsynthase","r":"drives the same","k":"needs"},{"s":"photophosphorylation","t":"lightdependent","r":"is the ATP-making step of the","k":"part"},{"s":"lightdependent","t":"nadph","r":"reduces NADP+ to","k":"makes"},{"s":"calvin","t":"rubisco","r":"fixes carbon dioxide using","k":"needs"},{"s":"calvin","t":"rubp","r":"begins and ends with","k":"part"},{"s":"calvin","t":"gptp","r":"reduces its 3-carbon intermediates,","k":"makes"},{"s":"nadph","t":"gptp","r":"reduces GP to","k":"needs"},{"s":"calvin","t":"glucose","r":"after six turns yields enough triose phosphate for","k":"makes"},{"s":"photosynthesis","t":"glucose","r":"synthesises","k":"makes"},{"s":"photosynthesis","t":"chloroplast","r":"occurs inside the","k":"needs"},{"s":"limitingfactors","t":"photosynthesis","r":"cap the rate of","k":"controls"},{"s":"limitingfactors","t":"enzymefactors","r":"are the photosynthetic case of","k":"part"},{"s":"photosynthesis","t":"respiration","r":"is the reverse equation of","k":"evidence"},{"s":"chemiosmosis","t":"photophosphorylation","r":"is the shared mechanism of respiration and","k":"part"},{"s":"cellsignalling","t":"ligand","r":"begins with a","k":"part"},{"s":"ligand","t":"receptor","r":"binds reversibly to a","k":"needs"},{"s":"receptor","t":"transduction","r":"binding triggers","k":"makes"},{"s":"transduction","t":"cellsignalling","r":"amplifies the message during","k":"part"},{"s":"hormone","t":"ligand","r":"is a slow, blood-borne","k":"part"},{"s":"neurotransmitter","t":"ligand","r":"is a fast, short-range","k":"part"},{"s":"receptor","t":"tertiary","r":"has a binding site shaped by its","k":"needs"},{"s":"hormone","t":"endocrine","r":"is released by the","k":"part"},{"s":"neurotransmitter","t":"synapse","r":"crosses the","k":"part"},{"s":"neuron","t":"actionpotential","r":"carries the","k":"part"},{"s":"neuron","t":"restingpotential","r":"holds a negative","k":"part"},{"s":"neuron","t":"synapse","r":"passes its signal on at a","k":"part"},{"s":"myelin","t":"actionpotential","r":"makes the","k":"controls"},{"s":"actionpotential","t":"faciliteddiffusion","r":"is generated by ions moving through voltage-gated channels by","k":"needs"},{"s":"synapse","t":"bulktransport","r":"releases vesicles by exocytosis, a form of","k":"needs"},{"s":"nervoussystem","t":"neuron","r":"is built from","k":"part"},{"s":"nervoussystem","t":"endocrine","r":"works alongside the","k":"part"},{"s":"hypothalamus","t":"homeostasis","r":"is the control centre for","k":"controls"},{"s":"hypothalamus","t":"pituitary","r":"issues instructions to the","k":"controls"},{"s":"pituitary","t":"thyroxine","r":"stimulates the thyroid to release","k":"controls"},{"s":"kidney","t":"osmoregulation","r":"carries out","k":"part"},{"s":"pathogen","t":"antigen","r":"displays a non-self","k":"part"},{"s":"antigen","t":"bcell","r":"is recognised by a specific","k":"needs"},{"s":"bcell","t":"antibody","r":"clones and secretes","k":"makes"},{"s":"antibody","t":"antigen","r":"binds one specific","k":"needs"},{"s":"tcell","t":"bcell","r":"activates the","k":"controls"},{"s":"phagocyte","t":"pathogen","r":"engulfs and digests the","k":"controls"},{"s":"vaccine","t":"antigen","r":"is a safe first exposure to an","k":"part"},{"s":"vaccine","t":"bcell","r":"creates memory","k":"makes"},{"s":"vaccine","t":"herdimmunity","r":"given widely produces","k":"makes"},{"s":"abo","t":"antigen","r":"is decided by which glycoprotein","k":"part"},{"s":"abo","t":"agglutination","r":"if mismatched in a transfusion causes","k":"makes"},{"s":"hiv","t":"tcell","r":"destroys","k":"controls"},{"s":"antibiotic","t":"prokaryote","r":"targets structures unique to a","k":"controls"},{"s":"antibiotic","t":"ribosome","r":"binds the 70S","k":"controls"},{"s":"zoonotic","t":"pathogen","r":"is a species-jumping","k":"part"},{"s":"abo","t":"glycoprotein","r":"antigens are a kind of","k":"part"},{"s":"transcription","t":"rnapolymerase","r":"is catalysed by","k":"needs"},{"s":"transcription","t":"mrna","r":"produces","k":"makes"},{"s":"transcriptionfactor","t":"transcription","r":"binds the promoter to switch","k":"controls"},{"s":"noncodingdna","t":"transcriptionfactor","r":"contains the promoters and enhancers bound by","k":"part"},{"s":"mrna","t":"splicing","r":"is processed by","k":"needs"},{"s":"splicing","t":"altsplicing","r":"that removes different exons becomes","k":"part"},{"s":"altsplicing","t":"geneexpression","r":"lets one gene make several proteins, expanding","k":"makes"},{"s":"capptail","t":"mrna","r":"protects and exports mature","k":"controls"},{"s":"mrna","t":"translation","r":"is read during","k":"needs"},{"s":"translation","t":"trna","r":"depends on","k":"needs"},{"s":"trna","t":"codon","r":"pairs its anticodon with an mRNA","k":"needs"},{"s":"codon","t":"geneticcode","r":"is interpreted using the","k":"part"},{"s":"geneticcode","t":"aminoacid","r":"specifies which","k":"makes"},{"s":"translation","t":"polypeptide","r":"assembles a","k":"makes"},{"s":"polypeptide","t":"posttranslational","r":"is finished by","k":"needs"},{"s":"posttranslational","t":"insulin","r":"cuts pre-proinsulin down to","k":"makes"},{"s":"proteasome","t":"polypeptide","r":"dismantles a worn","k":"controls"},{"s":"proteasome","t":"aminoacid","r":"recycles a protein into reusable","k":"makes"},{"s":"noncodingdna","t":"splicing","r":"includes the introns removed by","k":"part"},{"s":"geneexpression","t":"transcriptionfactor","r":"is controlled mainly by","k":"controls"},{"s":"geneexpression","t":"genotypephenotype","r":"turns genotype into phenotype, linking","k":"makes"},{"s":"mutagen","t":"mutation","r":"raises the rate of","k":"controls"},{"s":"mutation","t":"pointmutation","r":"includes the single-base","k":"part"},{"s":"pointmutation","t":"sicklecell","r":"in the haemoglobin gene causes","k":"makes"},{"s":"sicklecell","t":"haemoglobin","r":"changes one amino acid in","k":"controls"},{"s":"sicklecell","t":"rbc","r":"distorts the shape of the","k":"controls"},{"s":"mutation","t":"primary","r":"alters the codon sequence, changing a protein's","k":"controls"},{"s":"mutation","t":"oncogene","r":"turns a proto-oncogene into an","k":"makes"},{"s":"mutation","t":"tumoursuppressor","r":"disables a","k":"controls"},{"s":"oncogene","t":"cancer","r":"drives uncontrolled division, causing","k":"makes"},{"s":"tumoursuppressor","t":"apoptosis","r":"normally triggers","k":"controls"},{"s":"tumoursuppressor","t":"cancer","r":"when lost, releases the brake and allows","k":"makes"},{"s":"cellcycle","t":"interphase","r":"spends most of its time in","k":"part"},{"s":"cellcycle","t":"mitosis","r":"ends in","k":"part"},{"s":"mitosis","t":"cytokinesis","r":"is followed by","k":"makes"},{"s":"cyclin","t":"checkpoint","r":"binds CDKs to push the cell past each","k":"controls"},{"s":"checkpoint","t":"cellcycle","r":"halts the","k":"controls"},{"s":"checkpoint","t":"cancer","r":"failing allows","k":"makes"},{"s":"cancer","t":"mitoticindex","r":"is assessed using the","k":"evidence"},{"s":"cancer","t":"apoptosis","r":"escapes","k":"controls"},{"s":"mitosis","t":"cellcycle","r":"produces two identical cells at the end of the","k":"part"},{"s":"meiosis","t":"crossingover","r":"includes","k":"part"},{"s":"meiosis","t":"independentassort","r":"includes","k":"part"},{"s":"meiosis","t":"allele","r":"separates each pair of","k":"part"},{"s":"mitosis","t":"cancer","r":"when unchecked becomes","k":"makes"},{"s":"allele","t":"genotypephenotype","r":"combinations give the","k":"makes"},{"s":"allele","t":"punnett","r":"segregates in a way predicted by a","k":"evidence"},{"s":"punnett","t":"genotypephenotype","r":"predicts offspring","k":"evidence"},{"s":"sexlinkage","t":"allele","r":"on the X chromosome makes an","k":"part"},{"s":"pedigree","t":"allele","r":"traces an","k":"evidence"},{"s":"allele","t":"variation","r":"different versions of a gene are the basis of","k":"part"},{"s":"genotypephenotype","t":"natselect","r":"is the visible target of","k":"needs"},{"s":"homeostasis","t":"negfeedback","r":"works almost entirely by","k":"needs"},{"s":"negfeedback","t":"bloodglucose","r":"controls","k":"controls"},{"s":"negfeedback","t":"thermoregulation","r":"controls","k":"controls"},{"s":"negfeedback","t":"osmoregulation","r":"controls","k":"controls"},{"s":"bloodglucose","t":"insulin","r":"is lowered by","k":"controls"},{"s":"bloodglucose","t":"glucagon","r":"is raised by","k":"controls"},{"s":"glucagon","t":"glycogen","r":"triggers the breakdown of","k":"controls"},{"s":"insulin","t":"glycogen","r":"triggers glucose to be stored as","k":"controls"},{"s":"bloodglucose","t":"diabetes","r":"fails to be regulated in","k":"evidence"},{"s":"diabetes","t":"insulin","r":"in type I destroys the cells that make","k":"evidence"},{"s":"diabetes","t":"receptor","r":"in type II leaves unresponsive the insulin","k":"evidence"},{"s":"diabetes","t":"chd","r":"raises the long-term risk of","k":"evidence"},{"s":"thermoregulation","t":"vasodilation","r":"sheds or conserves heat by","k":"controls"},{"s":"thermoregulation","t":"thyroxine","r":"raises heat production using","k":"controls"},{"s":"thermoregulation","t":"hypothalamus","r":"is commanded by the","k":"needs"},{"s":"thyroxine","t":"respiration","r":"raises metabolic rate, increasing","k":"controls"},{"s":"osmoregulation","t":"osmosis","r":"adjusts the direction of","k":"controls"},{"s":"hormone","t":"insulin","r":"includes","k":"part"},{"s":"hormone","t":"glucagon","r":"includes","k":"part"},{"s":"hormone","t":"thyroxine","r":"includes","k":"part"},{"s":"cellsignalling","t":"homeostasis","r":"is the mechanism behind","k":"needs"},{"s":"cohesion","t":"water","r":"is a property of","k":"part"},{"s":"adhesion","t":"water","r":"is a property of","k":"part"},{"s":"thermalprops","t":"water","r":"is a property of","k":"part"},{"s":"thermalprops","t":"circulation","r":"lets blood carry heat evenly around the","k":"part"},{"s":"cohesion","t":"alveolus","r":"raises surface tension, which surfactant must reduce in the","k":"controls"},{"s":"asteroid","t":"goldilocks","r":"only mattered because Earth sits in the","k":"needs"},{"s":"goldilocks","t":"originlife","r":"made Earth a possible site for","k":"needs"},{"s":"solvent","t":"circulation","r":"makes blood plasma a transport medium in the","k":"part"},{"s":"rna","t":"nucleotide","r":"uses ribose and uracil in its","k":"part"},{"s":"rna","t":"mrna","r":"includes","k":"part"},{"s":"rna","t":"trna","r":"includes","k":"part"},{"s":"rna","t":"ribosome","r":"forms the rRNA core of the","k":"part"},{"s":"rna","t":"originlife","r":"may have been the first self-copying molecule at the","k":"evidence"},{"s":"pcr","t":"dnareplication","r":"copies the logic of","k":"part"},{"s":"pcr","t":"molecularevidence","r":"amplifies DNA so it can be sequenced for","k":"needs"},{"s":"nucleotide","t":"atp","r":"shares its structure with","k":"part"},{"s":"celltheory","t":"mitosis","r":"holds that cells come only from cells, which requires","k":"needs"},{"s":"originlife","t":"macromolecule","r":"required simple molecules to polymerise into","k":"needs"},{"s":"originlife","t":"membrane","r":"needed a boundary, so it required a","k":"needs"},{"s":"originlife","t":"enzyme","r":"needed catalysis, so it required","k":"needs"},{"s":"allopatric","t":"reproisolation","r":"is caused by geographical","k":"needs"},{"s":"sympatric","t":"polyploidy","r":"in plants often follows","k":"needs"},{"s":"adaptiveradiation","t":"variation","r":"only works where a population already holds","k":"needs"},{"s":"hybridisation","t":"meiosis","r":"fails because mismatched chromosomes cannot complete","k":"evidence"},{"s":"homologous","t":"evolution","r":"are morphological evidence for","k":"evidence"},{"s":"analogous","t":"natselect","r":"show how similar pressures shape unrelated species under","k":"evidence"},{"s":"convergent","t":"natselect","r":"is what happens when unrelated lineages face the same","k":"evidence"},{"s":"divergent","t":"homologous","r":"produces the pattern seen in","k":"makes"},{"s":"selectivebreeding","t":"variation","r":"only works if a population already contains","k":"needs"},{"s":"molecularevidence","t":"mutation","r":"counts the accumulated","k":"needs"},{"s":"polyploidy","t":"meiosis","r":"arises from incomplete separation during","k":"evidence"},{"s":"evolution","t":"differentiation","r":"of multicellularity depended on","k":"needs"},{"s":"carbon","t":"glucose","r":"forms the six-carbon ring of","k":"part"},{"s":"carbon","t":"aminoacid","r":"forms the central backbone of an","k":"part"},{"s":"carbon","t":"fattyacid","r":"forms the hydrocarbon chain of a","k":"part"},{"s":"monosaccharide","t":"disaccharide","r":"joins in pairs to form a","k":"makes"},{"s":"monosaccharide","t":"polysaccharide","r":"joins in chains to form a","k":"makes"},{"s":"disaccharide","t":"hydrolysis","r":"is broken back to sugars by","k":"needs"},{"s":"monosaccharide","t":"calvin","r":"is the eventual product of the","k":"makes"},{"s":"fattyacid","t":"triglyceride","r":"forms ester bonds to glycerol in a","k":"part"},{"s":"fattyacid","t":"phospholipid","r":"forms the two hydrophobic tails of a","k":"part"},{"s":"saturation","t":"lipid","r":"decides whether a fat is solid or liquid, shaping the","k":"controls"},{"s":"steroidhormone","t":"cellsignalling","r":"acts as a slow, powerful form of","k":"part"},{"s":"rgroup","t":"aminoacid","r":"gives each of the twenty","k":"part"},{"s":"rgroup","t":"secondary","r":"being non-polar favours the formation of","k":"controls"},{"s":"peptidebond","t":"hydrolysis","r":"is broken by","k":"needs"},{"s":"peptidebond","t":"aminoacid","r":"joins one","k":"part"},{"s":"collagen","t":"aminoacid","r":"is a triple helix of chains of","k":"part"},{"s":"keratin","t":"differentiation","r":"is made by specialised skin cells after","k":"makes"},{"s":"histone","t":"noncodingdna","r":"binds along coding and","k":"part"},{"s":"collagen","t":"artery","r":"gives tensile strength to the wall of an","k":"part"},{"s":"fluidmosaic","t":"membraneprotein","r":"describes proteins drifting in the bilayer as a mosaic of","k":"part"},{"s":"fluidmosaic","t":"phospholipid","r":"describes the fluid layer of","k":"part"},{"s":"amphipathic","t":"tertiary","r":"is also true of proteins folded so polar R groups face out, a result of","k":"part"},{"s":"simplediffusion","t":"cholesterol","r":"also lets small non-polar molecules such as","k":"part"},{"s":"faciliteddiffusion","t":"osmosis","r":"through aquaporins speeds up","k":"controls"},{"s":"glucose","t":"faciliteddiffusion","r":"moves into cells through GLUT carriers by","k":"controls"},{"s":"waterpotential","t":"osmosis","r":"is the gradient driving","k":"controls"},{"s":"waterpotential","t":"xylem","r":"falls at the leaf, pulling water through the","k":"controls"},{"s":"er","t":"ribosome","r":"in its rough form is studded with copies of the","k":"part"},{"s":"er","t":"lipid","r":"in its smooth form synthesises","k":"makes"},{"s":"morphogen","t":"cellsignalling","r":"is embryonic","k":"part"},{"s":"morphogen","t":"geneexpression","r":"directs regional","k":"controls"},{"s":"alveolus","t":"phospholipid","r":"is coated in surfactant made largely of","k":"needs"},{"s":"gamete","t":"meiosis","r":"is haploid because it is made by","k":"needs"},{"s":"gamete","t":"differentiation","r":"is a highly specialised cell shaped by","k":"makes"},{"s":"gamete","t":"variation","r":"carries a unique combination, generating","k":"makes"},{"s":"vein","t":"circulation","r":"returns blood at low pressure in the","k":"part"},{"s":"vein","t":"musclefibre","r":"is squeezed by surrounding","k":"needs"},{"s":"capillary","t":"vasodilation","r":"in the skin carries more blood after","k":"controls"},{"s":"chd","t":"lipid","r":"becomes more likely with high blood cholesterol, a","k":"evidence"},{"s":"chd","t":"artery","r":"is occlusion of a coronary","k":"part"},{"s":"phloem","t":"glucose","r":"transports sugars made from","k":"part"},{"s":"phloem","t":"activetransport","r":"loads sugars using","k":"needs"},{"s":"inducedfit","t":"activationenergy","r":"strains the substrate's bonds, lowering","k":"controls"},{"s":"collisiontheory","t":"enzymefactors","r":"explains why temperature and concentration change rate, giving","k":"evidence"},{"s":"collisiontheory","t":"enzyme","r":"explains why orientation matters to an","k":"evidence"},{"s":"inhibition","t":"feedbackinhibition","r":"includes the allosteric case of","k":"part"},{"s":"antibiotic","t":"inhibition","r":"such as penicillin works by irreversible","k":"part"},{"s":"cofactor","t":"haemoglobin","r":"includes the iron in the haem group of","k":"part"},{"s":"cofactor","t":"photosystem","r":"includes the magnesium at the heart of","k":"part"},{"s":"redox","t":"photosynthesis","r":"runs in reverse during","k":"part"},{"s":"redox","t":"etc","r":"is what every carrier passes on down the","k":"part"},{"s":"fadh2","t":"atp","r":"is worth about 1.5","k":"makes"},{"s":"nadh","t":"atp","r":"is worth about 2.5","k":"makes"},{"s":"anaerobic","t":"musclefibre","r":"lets a","k":"controls"},{"s":"anaerobic","t":"glucose","r":"only works when the substrate is","k":"needs"},{"s":"photosystem","t":"photolysis","r":"in PSII replaces its lost electrons using","k":"needs"},{"s":"rubisco","t":"enzyme","r":"is the most abundant","k":"part"},{"s":"rubp","t":"calvin","r":"is regenerated at the end of the","k":"part"},{"s":"rubp","t":"carbon","r":"fixes a molecule of carbon dioxide, adding one atom of","k":"makes"},{"s":"gptp","t":"glucose","r":"leaves the cycle to become","k":"makes"},{"s":"nadph","t":"calvin","r":"is spent in the","k":"needs"},{"s":"nadph","t":"redox","r":"carries reducing power, an example of","k":"part"},{"s":"chlorophyll","t":"chloroplast","r":"sit in the thylakoid membranes of the","k":"part"},{"s":"chlorophyll","t":"limitingfactors","r":"absorb the light that becomes one of the","k":"part"},{"s":"spectra","t":"photosynthesis","r":"compares light absorbed with the rate of","k":"evidence"},{"s":"chromatography","t":"chlorophyll","r":"separates carotene, xanthophyll and","k":"evidence"},{"s":"limitingfactors","t":"calvin","r":"when carbon dioxide is scarce, starves the","k":"controls"},{"s":"photosynthesis","t":"gasexchange","r":"in plants reverses the direction of","k":"part"},{"s":"transduction","t":"enzyme","r":"cascades usually work by activating one","k":"needs"},{"s":"transduction","t":"atp","r":"converts ATP into cyclic AMP, spending","k":"needs"},{"s":"neurotransmitter","t":"receptor","r":"binds a postsynaptic","k":"needs"},{"s":"restingpotential","t":"actionpotential","r":"must be re-established after each","k":"needs"},{"s":"restingpotential","t":"membraneprotein","r":"is maintained by pump","k":"needs"},{"s":"myelin","t":"neuron","r":"insulates the axon of a","k":"part"},{"s":"myelin","t":"lipid","r":"is built from","k":"part"},{"s":"nervoussystem","t":"hypothalamus","r":"includes the","k":"part"},{"s":"nervoussystem","t":"actionpotential","r":"signals fast and electrically using the","k":"needs"},{"s":"endocrine","t":"hormone","r":"secretes","k":"makes"},{"s":"endocrine","t":"pituitary","r":"includes the","k":"part"},{"s":"pituitary","t":"hormone","r":"releases","k":"makes"},{"s":"kidney","t":"waterpotential","r":"adjusts blood","k":"controls"},{"s":"kidney","t":"diabetes","r":"can be damaged by long-term","k":"evidence"},{"s":"hypothalamus","t":"thermoregulation","r":"initiates the responses of","k":"controls"},{"s":"tcell","t":"hiv","r":"falls in number during","k":"evidence"},{"s":"tcell","t":"antigen","r":"recognises a specific","k":"needs"},{"s":"phagocyte","t":"bulktransport","r":"engulfs by endocytosis, a form of","k":"needs"},{"s":"phagocyte","t":"antigen","r":"presents the pathogen's","k":"makes"},{"s":"herdimmunity","t":"pathogen","r":"breaks the transmission chain of a","k":"controls"},{"s":"herdimmunity","t":"vaccine","r":"depends on wide uptake of the","k":"needs"},{"s":"agglutination","t":"antibody","r":"is red cells clumped by recipient","k":"needs"},{"s":"agglutination","t":"capillary","r":"can block a","k":"controls"},{"s":"hiv","t":"pathogen","r":"is a viral","k":"part"},{"s":"zoonotic","t":"natselect","r":"spreads when a pathogen adapts to a new host under","k":"needs"},{"s":"antibody","t":"bcell","r":"is secreted by a plasma","k":"makes"},{"s":"helicasepol","t":"dna","r":"unwinds and copies","k":"controls"},{"s":"rnapolymerase","t":"mrna","r":"assembles","k":"makes"},{"s":"rnapolymerase","t":"noncodingdna","r":"binds a promoter within","k":"needs"},{"s":"altsplicing","t":"polypeptide","r":"produces several versions of one","k":"makes"},{"s":"capptail","t":"translation","r":"helps the ribosome initiate","k":"controls"},{"s":"trna","t":"aminoacid","r":"carries one specific","k":"needs"},{"s":"codon","t":"mrna","r":"is three consecutive bases of","k":"part"},{"s":"geneticcode","t":"evolution","r":"being universal across life is evidence for","k":"evidence"},{"s":"geneticcode","t":"codon","r":"is degenerate, so several","k":"part"},{"s":"proteasome","t":"geneexpression","r":"limits how long a protein lasts, fine-tuning","k":"controls"},{"s":"noncodingdna","t":"rna","r":"includes the genes for tRNA and rRNA, both types of","k":"makes"},{"s":"pointmutation","t":"mutagen","r":"can be triggered by a","k":"needs"},{"s":"mutagen","t":"cancer","r":"raises mutation rate and therefore the risk of","k":"makes"},{"s":"interphase","t":"dnareplication","r":"is when","k":"part"},{"s":"interphase","t":"mitosis","r":"prepares the cell for","k":"needs"},{"s":"cytokinesis","t":"cellcycle","r":"completes the","k":"part"},{"s":"cytokinesis","t":"membrane","r":"divides the cytoplasm by pinching the","k":"needs"},{"s":"crossingover","t":"meiosis","r":"occurs in prophase I of","k":"part"},{"s":"crossingover","t":"allele","r":"recombines linked","k":"controls"},{"s":"independentassort","t":"meiosis","r":"occurs in metaphase I of","k":"part"},{"s":"independentassort","t":"allele","r":"randomises which","k":"controls"},{"s":"cyclin","t":"cellcycle","r":"rising in concentration drives the","k":"controls"},{"s":"cyclin","t":"enzyme","r":"activates CDKs, which are","k":"part"},{"s":"oncogene","t":"mitosis","r":"forces repeated","k":"controls"},{"s":"apoptosis","t":"differentiation","r":"removes cells no longer needed after","k":"part"},{"s":"apoptosis","t":"cancer","r":"escaping is a defining trait of","k":"evidence"},{"s":"mitoticindex","t":"mitosis","r":"counts the fraction of cells in","k":"needs"},{"s":"punnett","t":"meiosis","r":"works because gametes are made by","k":"needs"},{"s":"sexlinkage","t":"pedigree","r":"shows a distinctive pattern in a","k":"evidence"},{"s":"sexlinkage","t":"genotypephenotype","r":"means males show recessive X-linked","k":"controls"},{"s":"pedigree","t":"genotypephenotype","r":"lets you deduce an unknown","k":"evidence"},{"s":"vasodilation","t":"thermoregulation","r":"is the fastest response in","k":"part"},{"s":"vasodilation","t":"capillary","r":"sends more blood through skin","k":"controls"},{"s":"insulin","t":"receptor","r":"must bind a target-cell","k":"needs"},{"s":"insulin","t":"posttranslational","r":"is only active after","k":"needs"},{"s":"diabetes","t":"bloodglucose","r":"is the long-term failure of","k":"evidence"},{"s":"homeostasis","t":"enzyme","r":"exists to protect the optimum conditions of","k":"needs"},{"s":"negfeedback","t":"hormone","r":"is usually carried out by a","k":"needs"}]}</script>
+<script>
+(function(){
+"use strict";
+
+/* ============================ data ============================ */
+const RAW = JSON.parse(document.getElementById('graphdata').textContent);
+const THEME = {
+  A:{c:'#E9B44C', name:'Unity & diversity'},
+  B:{c:'#57A9DC', name:'Form & function'},
+  C:{c:'#4FBE8F', name:'Interaction & interdependence'},
+  D:{c:'#E8608C', name:'Continuity & change'}
+};
+const KINDLABEL = {makes:'makes / becomes', needs:'needs / depends on', part:'is part of', controls:'controls', evidence:'is evidence for'};
+const DASH = {makes:[], needs:[6,4], controls:[1.6,4], part:[], evidence:[11,4,2,4]};
+const WIDTH = {makes:1.4, needs:1.4, controls:1.4, part:0.9, evidence:1.4};
+
+const nodes = RAW.nodes.map(n=>({...n, x:0,y:0,vx:0,vy:0, deg:0, out:[], inc:[]}));
+const byId = new Map(nodes.map(n=>[n.id,n]));
+const links = RAW.links.map(l=>({...l, a:byId.get(l.s), b:byId.get(l.t)}));
+links.forEach(l=>{ l.a.deg++; l.b.deg++; l.a.out.push(l); l.b.inc.push(l); });
+const adj = new Map(nodes.map(n=>[n.id,[]]));
+links.forEach(l=>{ adj.get(l.s).push([l.t,l]); adj.get(l.t).push([l.s,l]); });
+nodes.forEach(n=> n.r = 4.4 + Math.sqrt(n.deg)*2.2 );
+
+/* ======================= layout simulation ==================== */
+const ANCH = {A:[-560,-360], B:[560,-360], C:[560,360], D:[-560,360]};
+nodes.forEach((n,i)=>{
+  const a = ANCH[n.theme], ang = i*2.399;
+  n.x = a[0] + Math.cos(ang)*Math.sqrt(i)*22;
+  n.y = a[1] + Math.sin(ang)*Math.sqrt(i)*22;
+});
+let alpha = 1;
+function tick(){
+  if(alpha < 0.004) return false;
+  alpha *= 0.994;
+  const N = nodes.length;
+  for(let i=0;i<N;i++){
+    const a = nodes[i];
+    for(let j=i+1;j<N;j++){
+      const b = nodes[j];
+      let dx = b.x-a.x, dy = b.y-a.y;
+      let d2 = dx*dx+dy*dy;
+      if(d2 > 62500 || d2 === 0) continue;
+      if(d2 < 25) d2 = 25;
+      const f = 4200/d2, d = Math.sqrt(d2);
+      let fx = dx/d*f, fy = dy/d*f;
+      // hard collision: circles must not sit on top of each other
+      const min = a.r + b.r + 9;
+      if(d < min){ const push = (min-d)*0.5; fx += dx/d*push; fy += dy/d*push; }
+      a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
+    }
+  }
+  for(const l of links){
+    const a=l.a, b=l.b;
+    let dx=b.x-a.x, dy=b.y-a.y;
+    const d = Math.hypot(dx,dy)||1;
+    const rest = 96 + (a.theme===b.theme?0:40);
+    const f = (d-rest)*0.026;
+    const fx = dx/d*f, fy = dy/d*f;
+    a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
+  }
+  for(const n of nodes){
+    const a = ANCH[n.theme];
+    n.vx += (a[0]-n.x)*0.0022 - n.x*0.0006;
+    n.vy += (a[1]-n.y)*0.0022 - n.y*0.0006;
+    if(n.fixed){ n.vx=0; n.vy=0; continue; }
+    n.vx *= 0.82; n.vy *= 0.82;
+    n.x += n.vx*alpha*2.2; n.y += n.vy*alpha*2.2;
+  }
+  return true;
+}
+for(let i=0;i<700;i++) tick();
+
+/* ============================ view ============================ */
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let vw=0, vh=0, dpr=1;
+let tx=0, ty=0, k=1;
+function resize(){
+  const r = cv.getBoundingClientRect();
+  dpr = Math.min(window.devicePixelRatio||1, 2);
+  vw = r.width; vh = r.height;
+  cv.width = Math.round(vw*dpr); cv.height = Math.round(vh*dpr);
+  draw();
+}
+function fit(pad){
+  pad = pad||70;
+  const vis = nodes.filter(visible);
+  const list = vis.length?vis:nodes;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const n of list){ x0=Math.min(x0,n.x); y0=Math.min(y0,n.y); x1=Math.max(x1,n.x); y1=Math.max(y1,n.y); }
+  k = Math.min((vw-pad*2)/(x1-x0||1), (vh-pad*2)/(y1-y0||1));
+  k = Math.max(0.16, Math.min(k, 1.5));
+  tx = vw/2 - (x0+x1)/2*k; ty = vh/2 - (y0+y1)/2*k;
+  draw();
+}
+function toScreen(n){ return [n.x*k+tx, n.y*k+ty]; }
+function toWorld(px,py){ return [(px-tx)/k, (py-ty)/k]; }
+
+/* ========================= app state ========================== */
+let sel = null;            // selected node id
+let hover = null;          // hovered node id
+let mode = 'explore';      // 'explore' | 'trace'
+let traceA = null, traceB = null, tracePath = null, traceEdges = new Set();
+const off = new Set();     // hidden themes
+let pulse = 0;
+
+function visible(n){ return !off.has(n.theme); }
+function nbrs(id){ const s = new Set([id]); for(const [o] of adj.get(id)) s.add(o); return s; }
+
+/* =========================== drawing ========================== */
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,vw,vh);
+  ctx.save();
+  ctx.translate(tx,ty); ctx.scale(k,k);
+
+  const focus = hover || sel;
+  const near = focus ? nbrs(focus) : null;
+  const onPath = tracePath ? new Set(tracePath) : null;
+
+  // --- edges ---
+  for(const l of links){
+    const a=l.a, b=l.b;
+    if(!visible(a) || !visible(b)) continue;
+    const inTrace = traceEdges.has(l);
+    const inFocus = near && (near.has(a.id) && near.has(b.id)) && (a.id===focus || b.id===focus);
+    let alphaE, col, w;
+    if(inTrace){ alphaE=1; col='#C0A2FF'; w=2.4; }
+    else if(inFocus){ alphaE=0.85; col= a.id===focus ? THEME[b.theme].c : THEME[a.theme].c; w=WIDTH[l.k]+0.7; }
+    else if(focus || onPath){ alphaE=0.055; col='#8878A8'; w=WIDTH[l.k]; }
+    else { alphaE=0.19; col='#8878A8'; w=WIDTH[l.k]; }
+    ctx.globalAlpha = alphaE;
+    ctx.strokeStyle = col; ctx.lineWidth = w/k;
+    ctx.setLineDash(DASH[l.k].map(v=>v/k));
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    ctx.setLineDash([]);
+    if((inTrace || inFocus) && k>0.35) arrow(a,b,col,alphaE);
+    if(inTrace){
+      // travelling pulse
+      const t = (pulse + (l.i||0)*0.13) % 1;
+      const px = a.x + (b.x-a.x)*t, py = a.y + (b.y-a.y)*t;
+      ctx.globalAlpha = 0.95; ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath(); ctx.arc(px,py,2.4/k,0,7); ctx.fill();
+    }
+  }
+
+  // --- nodes ---
+  for(const n of nodes){
+    if(!visible(n)) continue;
+    const isSel = n.id===sel, isNear = near && near.has(n.id), inP = onPath && onPath.has(n.id);
+    const isEnd = n.id===traceA || n.id===traceB;
+    let a = 1;
+    if(tracePath){ a = inP ? 1 : 0.13; }
+    else if(focus){ a = isNear ? 1 : 0.15; }
+    const col = THEME[n.theme].c;
+    ctx.globalAlpha = a;
+
+    if(isSel || isEnd || (inP && tracePath)){
+      ctx.globalAlpha = a*0.22; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r+9/k,0,7); ctx.fill();
+      ctx.globalAlpha = a;
+    }
+    const rr = (inP ? n.r*1.35 : n.r);
+    // cytoplasm
+    ctx.fillStyle = col;
+    ctx.globalAlpha = a*0.30;
+    ctx.beginPath(); ctx.arc(n.x,n.y,rr,0,7); ctx.fill();
+    // wall
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = col; ctx.lineWidth = (isSel||isEnd||inP?2.1:1.25)/k;
+    ctx.beginPath(); ctx.arc(n.x,n.y,rr,0,7); ctx.stroke();
+    // nucleus
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(n.x,n.y,Math.max(1.1,rr*0.34),0,7); ctx.fill();
+  }
+
+  // --- labels: placed greedily by importance, skipping any that would collide ---
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  const showAll = k > 0.62;
+  const cand = [];
+  for(const n of nodes){
+    if(!visible(n)) continue;
+    const isSel=n.id===sel, isNear = near&&near.has(n.id), inP = onPath&&onPath.has(n.id);
+    if(tracePath && !inP) continue;
+    if(!(showAll || n.deg>=8 || isSel || isNear || inP)) continue;
+    const big = isSel || inP || n.id===focus;
+    let pri = n.deg;
+    if(isNear) pri += 500;
+    if(inP) pri += 2000;
+    if(big) pri += 4000;
+    let a = 1;
+    if(tracePath) a = 1;
+    else if(focus) a = isNear?1:0.18;
+    else a = showAll?0.78:0.6;
+    cand.push({n, big, pri, a});
+  }
+  cand.sort((p,q)=> q.pri-p.pri);
+  const boxes = [];
+  const fits = (x,y,w,h)=>{
+    for(let i=0;i<boxes.length;i++){
+      const b = boxes[i];
+      if(x < b.x+b.w && x+w > b.x && y < b.y+b.h && y+h > b.y) return false;
+    }
+    return true;
+  };
+  for(const c of cand){
+    const n = c.n;
+    const fs = (c.big?12.5:11)/k;
+    ctx.font = (c.big?'600 ':'400 ')+fs+'px "Public Sans",system-ui,sans-serif';
+    const w = ctx.measureText(n.label).width + 6/k;
+    const h = fs*1.3;
+    const x = n.x - w/2, y = n.y + n.r + 3.5/k;
+    if(!c.big && !fits(x,y,w,h)) continue;   // important labels always win their space
+    boxes.push({x,y,w,h});
+    ctx.globalAlpha = c.a*0.72;
+    ctx.fillStyle = '#0E0B14';
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = c.a;
+    ctx.fillStyle = c.big ? '#FFFFFF' : '#C6BAD8';
+    ctx.fillText(n.label, n.x, y+1/k);
+  }
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+function arrow(a,b,col,al){
+  const ang = Math.atan2(b.y-a.y,b.x-a.x);
+  const ex = b.x - Math.cos(ang)*(b.r+1.5/k), ey = b.y - Math.sin(ang)*(b.r+1.5/k);
+  const s = 6/k;
+  ctx.globalAlpha = al; ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-Math.cos(ang-0.42)*s, ey-Math.sin(ang-0.42)*s);
+  ctx.lineTo(ex-Math.cos(ang+0.42)*s, ey-Math.sin(ang+0.42)*s);
+  ctx.closePath(); ctx.fill();
+}
+
+/* animation loop: only runs when something needs it */
+let raf=null, settling=false;
+function loop(){
+  let more = false;
+  if(settling){ more = tick(); if(!more) settling=false; }
+  if(traceEdges.size){ pulse = (pulse+0.006)%1; more = true; }
+  draw();
+  raf = more ? requestAnimationFrame(loop) : null;
+}
+function kick(){ if(!raf) raf = requestAnimationFrame(loop); }
+function reheat(v){ alpha = Math.max(alpha, v||0.35); settling=true; kick(); }
+
+/* ========================== interaction ======================= */
+let drag=null, panning=null, moved=false;
+function hit(px,py){
+  const [wx,wy] = toWorld(px,py);
+  let best=null, bd=1e9;
+  for(const n of nodes){
+    if(!visible(n)) continue;
+    const d = Math.hypot(n.x-wx, n.y-wy);
+    if(d < n.r + 9/k && d < bd){ bd=d; best=n; }
+  }
+  return best;
+}
+cv.addEventListener('pointerdown', e=>{
+  cv.setPointerCapture(e.pointerId);
+  moved=false;
+  const r = cv.getBoundingClientRect();
+  const n = hit(e.clientX-r.left, e.clientY-r.top);
+  if(n){ drag = {n, ox:0, oy:0}; n.fixed=true; }
+  else { panning = {x:e.clientX-tx, y:e.clientY-ty}; cv.classList.add('grabbing'); }
+});
+cv.addEventListener('pointermove', e=>{
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX-r.left, py = e.clientY-r.top;
+  if(drag){
+    moved=true;
+    const [wx,wy] = toWorld(px,py);
+    drag.n.x=wx; drag.n.y=wy; reheat(0.16); return;
+  }
+  if(panning){ moved=true; tx = e.clientX-panning.x; ty = e.clientY-panning.y; draw(); return; }
+  const n = hit(px,py);
+  cv.classList.toggle('pointing', !!n);
+  const id = n?n.id:null;
+  if(id!==hover){ hover=id; draw(); }
+  showTip(n, e.clientX, e.clientY);
+});
+function endPointer(e){
+  const r = cv.getBoundingClientRect();
+  if(drag){
+    drag.n.fixed=false;
+    if(!moved) select(drag.n.id);
+    drag=null;
+  } else if(panning){
+    if(!moved && mode==='explore'){ /* click empty space */ select(null); }
+    panning=null; cv.classList.remove('grabbing');
+  }
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('pointerleave', ()=>{ hover=null; hideTip(); draw(); });
+cv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX-r.left, py = e.clientY-r.top;
+  const [wx,wy] = toWorld(px,py);
+  const f = Math.exp(-e.deltaY*0.0016);
+  k = Math.max(0.12, Math.min(3.2, k*f));
+  tx = px - wx*k; ty = py - wy*k;
+  draw();
+},{passive:false});
+
+const tipEl = document.getElementById('tip');
+function showTip(n,cx,cy){
+  if(!n){ hideTip(); return; }
+  tipEl.innerHTML = '<div class="t" style="color:'+THEME[n.theme].c+'">'+esc(n.label)+'</div>'+
+    '<div class="b">'+esc(n.def.slice(0,120))+(n.def.length>120?'…':'')+'<br><em>'+n.deg+' link'+(n.deg===1?'':'s')+'</em></div>';
+  tipEl.classList.add('on');
+  const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  tipEl.style.left = Math.min(cx+16, window.innerWidth-w-10)+'px';
+  tipEl.style.top = Math.max(8, Math.min(cy+16, window.innerHeight-h-10))+'px';
+}
+function hideTip(){ tipEl.classList.remove('on'); }
+
+/* zoom buttons */
+function zoomBy(f){
+  const px=vw/2, py=vh/2, [wx,wy]=toWorld(px,py);
+  k = Math.max(0.12, Math.min(3.2, k*f));
+  tx = px-wx*k; ty = py-wy*k; draw();
+}
+document.getElementById('zin').onclick = ()=>zoomBy(1.3);
+document.getElementById('zout').onclick = ()=>zoomBy(1/1.3);
+document.getElementById('zfit').onclick = ()=>{ fit(); };
+document.getElementById('keyt').onclick = ()=>{
+  const el = document.getElementById('key');
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+};
+
+/* ========================== selection ========================= */
+function select(id, keepView){
+  if(mode==='trace' && id){
+    if(!traceA){ traceA=id; }
+    else if(!traceB && id!==traceA){ traceB=id; computePath(); }
+    else { traceA=id; traceB=null; tracePath=null; traceEdges.clear(); }
+    renderTrace(); draw(); kick(); return;
+  }
+  sel = id;
+  renderPanel();
+  if(id && !keepView) centerOn(byId.get(id));
+  draw();
+}
+function centerOn(n){
+  const target = Math.max(k, 0.72);
+  const sx = vw/2, sy = vh/2;
+  const k0=k, tx0=tx, ty0=ty;
+  const k1=target, tx1 = sx - n.x*target, ty1 = sy - n.y*target;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ k=k1; tx=tx1; ty=ty1; draw(); return; }
+  const t0 = performance.now();
+  (function anim(){
+    const p = Math.min(1,(performance.now()-t0)/420);
+    const e = 1-Math.pow(1-p,3);
+    k = k0+(k1-k0)*e; tx = tx0+(tx1-tx0)*e; ty = ty0+(ty1-ty0)*e;
+    draw();
+    if(p<1) requestAnimationFrame(anim);
+  })();
+}
+
+/* ============================ panel =========================== */
+const panel = document.getElementById('panel');
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function intro(){
+  const counts = {A:0,B:0,C:0,D:0};
+  nodes.forEach(n=>counts[n.theme]++);
+  return '<div class="empty">'+
+   '<h2>Nothing in biology stands on its own.</h2>'+
+   '<p class="lead">This is every idea in your notes, drawn as one system. Each circle is a concept. Each line is a stated relationship — not decoration, but a claim you could write in an exam.</p>'+
+   '<div class="stat">'+
+     '<div><span>'+nodes.length+'</span><small>concepts</small></div>'+
+     '<div><span>'+links.length+'</span><small>links</small></div>'+
+     '<div><span>4</span><small>themes</small></div>'+
+   '</div>'+
+   '<ul>'+
+     '<li><span class="n">01</span><b>Click any circle</b> to read what it is and every concept it touches, with the relationship spelled out.</li>'+
+     '<li><span class="n">02</span><b>Trace a path</b> between two ideas and the web writes the chain of reasoning connecting them. Try glucose to thermoregulation.</li>'+
+     '<li><span class="n">03</span><b>Filter by theme</b> using the four chips above, or search by name.</li>'+
+     '<li><span class="n">04</span><b>Drag, scroll and pan</b> the web itself. Nodes grow with the number of links they carry, so the busiest ideas are the biggest.</li>'+
+   '</ul>'+
+   '<p style="margin-top:20px;color:var(--faint);font-size:12.5px">The four clusters are the four syllabus themes. Where they touch is where the interesting questions live.</p>'+
+   '</div>';
+}
+
+function sentence(l, fromId){
+  const a=l.a, b=l.b;
+  const meIsA = a.id===fromId;
+  const A = '<b style="color:'+THEME[a.theme].c+'">'+esc(a.label)+'</b>';
+  const B = '<b style="color:'+THEME[b.theme].c+'">'+esc(b.label)+'</b>';
+  const Am = meIsA ? '<b class="me">'+esc(a.label)+'</b>' : A;
+  const Bm = !meIsA ? '<b class="me">'+esc(b.label)+'</b>' : B;
+  return Am+' '+esc(l.r)+' '+Bm;
+}
+
+function renderPanel(){
+  if(!sel){ panel.innerHTML = intro(); return; }
+  const n = byId.get(sel);
+  const col = THEME[n.theme].c;
+  const outs = n.out.slice().sort((x,y)=> y.b.deg-x.b.deg);
+  const incs = n.inc.slice().sort((x,y)=> y.a.deg-x.a.deg);
+  let h = '';
+  h += '<div class="crumb">'+
+        '<span class="code">'+esc(n.code)+'</span>'+
+        (n.hl?'<span class="hl" style="color:'+col+'">HL</span>':'')+
+        '<span class="themetag" style="color:'+col+'">'+esc(THEME[n.theme].name)+'</span>'+
+        '<button class="back" id="clearsel">clear ✕</button>'+
+       '</div>';
+  h += '<h2 class="title">'+esc(n.label)+'</h2>';
+  h += '<p class="def">'+esc(n.def)+'</p>';
+
+  if(outs.length){
+    h += '<div class="secthead"><h3>What it leads to</h3><span>'+outs.length+'</span></div>';
+    for(const l of outs) h += linkRow(l, n.id, l.t);
+  }
+  if(incs.length){
+    h += '<div class="secthead"><h3>What leads to it</h3><span>'+incs.length+'</span></div>';
+    for(const l of incs) h += linkRow(l, n.id, l.s);
+  }
+  h += '<div class="secthead"><h3>Trace from here</h3><span></span></div>'+
+       '<button class="link" id="startTrace"><span class="kind">path finder</span>'+
+       '<span class="sent">Use <b style="color:var(--violet)">'+esc(n.label)+'</b> as the starting point and pick a destination.</span></button>';
+  panel.innerHTML = h;
+  panel.parentElement.querySelector('.pscroll').scrollTop = 0;
+  panel.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=> select(b.dataset.go));
+  panel.querySelectorAll('[data-go]').forEach(b=>{
+    b.onmouseenter = ()=>{ hover = b.dataset.go; draw(); };
+    b.onmouseleave = ()=>{ hover = null; draw(); };
+  });
+  const cs = document.getElementById('clearsel'); if(cs) cs.onclick = ()=>select(null);
+  const st = document.getElementById('startTrace');
+  if(st) st.onclick = ()=>{ setMode('trace'); traceA = n.id; traceB=null; tracePath=null; traceEdges.clear(); renderTrace(); draw(); };
+}
+function linkRow(l, meId, otherId){
+  return '<button class="link" data-go="'+otherId+'">'+
+    '<span class="kind">'+KINDLABEL[l.k]+'</span>'+
+    '<span class="sent">'+sentence(l, meId)+'</span></button>';
+}
+
+/* =========================== trace mode ======================= */
+const tracebarEl = document.getElementById('tracebar');
+const tracebtn = document.getElementById('tracebtn');
+function setMode(m){
+  mode = m;
+  tracebtn.classList.toggle('on', m==='trace');
+  tracebtn.textContent = m==='trace' ? 'Exit trace' : 'Trace a path';
+  tracebarEl.style.display = m==='trace' ? 'block':'none';
+  if(m==='trace'){ sel=null; renderTrace(); }
+  else { traceA=traceB=null; tracePath=null; traceEdges.clear(); renderPanel(); }
+  draw(); kick();
+}
+tracebtn.onclick = ()=> setMode(mode==='trace'?'explore':'trace');
+
+function renderTrace(){
+  const nameA = traceA?byId.get(traceA).label:'Pick a starting concept';
+  const nameB = traceB?byId.get(traceB).label:(traceA?'Now pick a destination':'then a destination');
+  tracebarEl.innerHTML =
+    '<div class="tracebar"><h3>Path finder</h3>'+
+    '<div class="slots">'+
+      '<div class="slot '+(traceA?'filled':'active')+'">'+esc(nameA)+'</div>'+
+      '<span class="arrow">→</span>'+
+      '<div class="slot '+(traceB?'filled':(traceA?'active':''))+'">'+esc(nameB)+'</div>'+
+    '</div>'+
+    '<div class="tracebtns">'+
+      '<button id="trreset">Clear</button>'+
+      '<button id="trrand">Surprise me</button>'+
+    '</div></div>';
+  document.getElementById('trreset').onclick = ()=>{ traceA=traceB=null; tracePath=null; traceEdges.clear(); renderTrace(); tracePanel(); draw(); };
+  document.getElementById('trrand').onclick = ()=>{
+    const vis = nodes.filter(visible);
+    if(vis.length<2) return;
+    traceA = vis[Math.floor(Math.random()*vis.length)].id;
+    do { traceB = vis[Math.floor(Math.random()*vis.length)].id; } while(traceB===traceA);
+    computePath(); renderTrace(); draw(); kick();
+  };
+  tracePanel();
+}
+function computePath(){
+  const prev = new Map(), seen = new Set([traceA]);
+  let q=[traceA], found=false;
+  while(q.length && !found){
+    const nq=[];
+    for(const cur of q){
+      for(const [o,l] of adj.get(cur)){
+        if(seen.has(o)) continue;
+        if(!visible(byId.get(o))) continue;
+        seen.add(o); prev.set(o,[cur,l]); 
+        if(o===traceB){ found=true; break; }
+        nq.push(o);
+      }
+      if(found) break;
+    }
+    q=nq;
+  }
+  traceEdges.clear();
+  if(!found){ tracePath=null; tracePanel(); return; }
+  const path=[traceB], edges=[];
+  let cur=traceB;
+  while(cur!==traceA){ const [p,l]=prev.get(cur); edges.unshift(l); path.unshift(p); cur=p; }
+  tracePath = path; tracePathEdges = edges;
+  edges.forEach((l,i)=>{ l.i=i; traceEdges.add(l); });
+  tracePanel();
+  fitPath();
+}
+let tracePathEdges = [];
+function fitPath(){
+  if(!tracePath) return;
+  const list = tracePath.map(id=>byId.get(id));
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const n of list){ x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x);y1=Math.max(y1,n.y); }
+  const pad=110;
+  const k1 = Math.max(0.2, Math.min(1.4, Math.min((vw-pad*2)/(x1-x0||1),(vh-pad*2)/(y1-y0||1))));
+  const tx1 = vw/2-(x0+x1)/2*k1, ty1 = vh/2-(y0+y1)/2*k1;
+  const k0=k,tx0=tx,ty0=ty, t0=performance.now();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ k=k1;tx=tx1;ty=ty1;draw(); return; }
+  (function anim(){
+    const p=Math.min(1,(performance.now()-t0)/500), e=1-Math.pow(1-p,3);
+    k=k0+(k1-k0)*e; tx=tx0+(tx1-tx0)*e; ty=ty0+(ty1-ty0)*e; draw();
+    if(p<1) requestAnimationFrame(anim);
+  })();
+}
+function tracePanel(){
+  if(!traceA){
+    panel.innerHTML = '<div class="empty"><h2>Two ideas, one chain of reasoning.</h2>'+
+      '<p>Choose any two concepts. The web finds the shortest route between them and writes out every link along the way, in order.</p>'+
+      '<p style="color:var(--faint);font-size:12.5px">Click a circle on the web, search by name, or press <b>Surprise me</b>.</p></div>';
+    return;
+  }
+  if(!traceB){
+    panel.innerHTML = '<div class="empty"><p class="lead">Starting at <b style="color:'+THEME[byId.get(traceA).theme].c+'">'+esc(byId.get(traceA).label)+'</b>.</p>'+
+      '<p>Now pick a destination — the further away it looks, the more interesting the route.</p></div>';
+    return;
+  }
+  if(!tracePath){
+    panel.innerHTML = '<div class="empty"><p class="lead">No route with the current filters.</p><p>Some themes are switched off, which has cut the web in two. Turn them back on and try again.</p></div>';
+    return;
+  }
+  let h = '<div class="crumb"><span class="code">'+(tracePath.length-1)+' step'+(tracePath.length===2?'':'s')+'</span>'+
+          '<span class="themetag" style="color:var(--violet)">shortest route</span></div>';
+  h += '<h2 class="title">'+esc(byId.get(traceA).label)+' <span style="color:var(--faint)">→</span> '+esc(byId.get(traceB).label)+'</h2>';
+
+  // narrative: every clause is written in the direction its relationship was stated,
+  // so it always reads as a true sentence. Consecutive forward hops chain with "which".
+  let nar = '', chainSubject = null;
+  const B = id => '<b>'+esc(byId.get(id).label)+'</b>';
+  // ", which …" only reads correctly if the relationship opens with a finite verb
+  // or a leading adverbial. Anything else starts a fresh sentence instead.
+  const CHAINABLE = /^([a-z]+s|is|are|can|must|has|have|let|lets|only|when|if|in|after|before|during|such|given|that|repeated|by|of)\b/;
+  for(let i=0;i<tracePathEdges.length;i++){
+    const l = tracePathEdges[i], from = tracePath[i], to = tracePath[i+1];
+    const fwd = l.s===from;
+    const r = '<i>'+esc(l.r)+'</i>';
+    if(fwd){
+      if(chainSubject===from && CHAINABLE.test(l.r)) nar += ', which '+r+' '+B(to);
+      else nar += (nar?'. ':'')+B(from)+' '+r+' '+B(to);
+      chainSubject = to;
+    } else {
+      nar += (nar?'. ':'')+B(to)+' '+r+' '+B(from);
+      chainSubject = null;
+    }
+  }
+  h += '<div class="narrative">'+nar+'.</div>';
+
+  for(let i=0;i<tracePath.length;i++){
+    const n = byId.get(tracePath[i]);
+    const col = THEME[n.theme].c;
+    const last = i===tracePath.length-1;
+    h += '<div class="step"><div class="rail">'+
+         '<div class="bead" style="background:'+col+'"></div>'+
+         (last?'':'<div class="stem"></div>')+
+         '</div><div class="stepbody">'+
+         '<button class="nm" data-go="'+n.id+'" style="color:'+col+'">'+esc(n.label)+'</button>';
+    if(!last){
+      const l = tracePathEdges[i];
+      const fwd = l.s===tracePath[i];
+      h += '<div class="via">'+(fwd?'':'<span class="rev">↰ read backwards &nbsp;</span>')+
+           '<em>'+esc(KINDLABEL[l.k])+'</em> — '+sentence(l, fwd?n.id:tracePath[i+1])+'</div>';
+    }
+    h += '</div></div>';
+  }
+  panel.innerHTML = h;
+  panel.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>{ setMode('explore'); select(b.dataset.go); });
+}
+
+/* =========================== filters ========================== */
+const themesEl = document.getElementById('themes');
+themesEl.innerHTML = Object.keys(THEME).map(t=>
+  '<button class="chip on" data-t="'+t+'" style="color:'+THEME[t].c+'" title="'+THEME[t].name+'"><span class="sw"></span>'+t+'</button>'
+).join('');
+themesEl.querySelectorAll('.chip').forEach(b=>{
+  b.onclick = ()=>{
+    const t = b.dataset.t;
+    if(off.has(t)){ off.delete(t); b.classList.add('on'); b.classList.remove('off'); }
+    else { off.add(t); b.classList.remove('on'); b.classList.add('off'); }
+    if(sel && off.has(byId.get(sel).theme)) select(null);
+    if(tracePath) computePath();
+    draw();
+  };
+});
+
+/* =========================== search =========================== */
+const q = document.getElementById('q'), res = document.getElementById('res');
+let curIdx = -1, curList = [];
+function runSearch(){
+  const s = q.value.trim().toLowerCase();
+  if(!s){ res.classList.remove('on'); curList=[]; return; }
+  curList = nodes.filter(n=> visible(n) && (n.label.toLowerCase().includes(s) || n.code.toLowerCase().includes(s) || n.def.toLowerCase().includes(s)))
+    .sort((a,b)=>{
+      const ai = a.label.toLowerCase().indexOf(s), bi = b.label.toLowerCase().indexOf(s);
+      const av = ai<0?99:ai, bv = bi<0?99:bi;
+      return av-bv || b.deg-a.deg;
+    }).slice(0,12);
+  curIdx = 0;
+  res.innerHTML = curList.length ? curList.map((n,i)=>
+    '<button data-go="'+n.id+'" class="'+(i===0?'cur':'')+'">'+
+    '<span class="dot" style="background:'+THEME[n.theme].c+'"></span>'+
+    '<span class="nm">'+esc(n.label)+'</span><span class="cd">'+esc(n.code)+'</span></button>').join('')
+    : '<div style="padding:10px;color:var(--faint);font-size:12.5px">No concept matches that.</div>';
+  res.classList.add('on');
+  res.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>{ pick(b.dataset.go); });
+}
+function pick(id){
+  q.value=''; res.classList.remove('on'); q.blur();
+  select(id);
+}
+q.addEventListener('input', runSearch);
+q.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ e.stopPropagation(); q.value=''; res.classList.remove('on'); q.blur(); return; }
+  if(!curList.length) return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault();
+    curIdx = (curIdx + (e.key==='ArrowDown'?1:-1) + curList.length)%curList.length;
+    res.querySelectorAll('button').forEach((b,i)=> b.classList.toggle('cur', i===curIdx));
+  }
+  if(e.key==='Enter'){ e.preventDefault(); pick(curList[curIdx].id); }
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('.search')) res.classList.remove('on'); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='/' && document.activeElement!==q){ e.preventDefault(); q.focus(); }
+  if(e.key==='Escape'){ if(mode==='trace'){ setMode('explore'); } else select(null); }
+});
+
+/* =========================== toast ============================ */
+const toastEl = document.getElementById('toast');
+let toastT=null;
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(()=>toastEl.classList.remove('on'), 2600);
+}
+
+/* =========================== boot ============================= */
+window.addEventListener('resize', ()=>{ resize(); });
+resize(); fit(); renderPanel();
+setTimeout(()=>toast('Click any concept, or trace a path between two.'), 900);
+
+})();
+</script>
+</body>
+</html>
